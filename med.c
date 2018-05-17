@@ -2097,10 +2097,10 @@ redraw_screen()
 */
 /********		*/
 
-//	print_line_x_color(ln->x, n+i, ln->str, ln->color);
-	print_color_line(ln, n+i); /* seg fault*/
+	print_line_x_color(ln->x, n+i, ln->str, ln->color);
+//	print_color_line(ln, n+i); /* seg fault*/
 sprintf(msg, "%d", n+i);
-getchar();
+//getchar();
 //gmessage(msg);
 	ln = ln->forw;
 /*
