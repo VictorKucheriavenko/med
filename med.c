@@ -199,11 +199,6 @@ loop:
 	pfunc =	command_char(com_key);
 
 
-
-	if (pfunc) {
-		pfunc();
-	}
-
 	if( key_valid ) {
 		key_pressed[com_key]++;
 	}
@@ -451,9 +446,6 @@ del (char **pstr, int o, int n)
 int
 del_char()
 {
- if( !file->cur_line )
-   return 0;
-
 /*
  if( file->cur_line->len == 0 ) {
 	del_lines(file->cur_line, file->cur_line);
@@ -465,19 +457,6 @@ del_char()
  file->cur_line->len = strlen(file->cur_line->str);
  if(file->offs == file->cur_line->len)
 	move_backward(1);
- return 0;
-}
-
-
-int
-del_char_right()
-{
- char buf[MAX_LINE];
- int len = strlen( file->cur_line->str );
-//*(file->cur_line->
- memmove(file->cur_line->str + file->offs, file->cur_line->str + file->offs + 1, len + 1);
- printf( CLR"%s", file->cur_line->str + file->offs);
- moveyx(13, file->offs+1);
  return 0;
 }
 
@@ -503,12 +482,8 @@ case_backward()
  if(file->offs == 0) return 0;
 
  int i;
- for(i = file->offs - 1; (isalnum(file->cur_line->str[i]) || file->cur_line->str[i] == '_') && i >= 0; i--) {
-// if(islower(file->cur_line->str[i]))
+ for(i = file->offs - 1; (isalnum(file->cur_line->str[i]) || file->cur_line->str[i] == '_') && i >= 0; i--)
    file->cur_line->str[i] = toupper(file->cur_line->str[i]);
-// else
-//   file->cur_line->str[i] = tolower(file->cur_line->str[i]);
- }
  print_cur_line();
  return 0;
 }
@@ -531,9 +506,6 @@ case_char()
 int
 move_word_back()
 {
- if (!file->cur_line)
-	return 1;
-
  int tmp = 0;
  move_backward(1);  
  tmp = file->offs;
@@ -550,6 +522,7 @@ move_word_back()
 }
 
 
+#if 0
 char*
 insert_str (char **pstr1, int n, char *str2)
 {
@@ -568,6 +541,7 @@ insert_str (char **pstr1, int n, char *str2)
  free(buf);
  return NULL;
 }
+#endif
 
 
 char*
@@ -592,15 +566,9 @@ insert_ch (char **pstr, int n, char c)
  return NULL;
 }
 
-
 int
 insert_indent()
 {
- if(!file->cur_line) return 1;
-
- int i = auto_set_mark();
- if (i) return;
-
  char ch;
  ch = getchar();
  line_t *line;
@@ -683,8 +651,6 @@ getstring(char* buf, char* str) {
 int
 insert_string()
 {
- if(!file->cur_line) return 1;
-
  int res, ret;
  char ch;
  char *tmp;
@@ -777,8 +743,6 @@ insert_string()
 int
 insert_string_after()
 {
- if(!file->cur_line) return 1;
-
  int ret;
  save_cur();
  file->offs++;
@@ -839,10 +803,6 @@ cmd_edit_line_end()
 int
 concat_lines()
 {
- if(!file->cur_line->forw)
-   return 0;
-
- int i;
  char *buf;
  line_t *tmp;
  
@@ -1027,37 +987,8 @@ make_line()
 
 
 int
-insert_string_after2()
-{
- int i;
- char *buf = malloc(MAX_LINE);
-
- struct termios term;
- struct termios restore;
-
- tcgetattr(0, &term);
- tcgetattr(0, &restore);
- term.c_lflag |= (ICANON | ECHO);
- tcsetattr(0, TCSANOW, &term);
-
- save_cur();
- readstring(buf, MAX_LINE);
- insert_str( &file->cur_line->str, file->offs + 1, buf);
- file->cur_line->len = strlen( file->cur_line->str);
- moveyx(file->y_cur, 1);
- printf(CLL"%s", file->cur_line->str  );
- rest_cur();
-
- tcsetattr(0, TCSANOW, &restore);
- return 0;
-}
-
-
-int
 change_char()
 {
- if(!file->cur_line) return 1;
-
  char c = getchar();
 
  file->cur_line->str[file->offs] = c;
@@ -1068,7 +999,6 @@ change_char()
 int
 insert_space()
 {
- if(!file->cur_line) return 1;
  insert_ch( &file->cur_line->str, file->offs, ' ');
  file->cur_line->len++;
  print_cur_line();
@@ -1079,8 +1009,6 @@ insert_space()
 int
 insert_char()
 {
- if( !file->cur_line )  return 1;
-
  char ch = getchar();
 
  insert_ch( &file->cur_line->str, file->offs, ch);
@@ -1094,7 +1022,6 @@ insert_char()
 int
 insert_char_next()
 {
- if(!file->cur_line) return 1;
  char ch = getchar();
  save_cur();
  moveyx(file->y_cur, file->x_cur + 1);
@@ -1398,21 +1325,12 @@ cur_down()
  moveyx(_wincur, 1);
 }
 
-
 int
 move_down(int n)
 {
  int i;
-
- if (file->cur_line == NULL)
-	return 0;
-
  for( i = 0; i < n && file->cur_line->forw; i++)
 	file->cur_line = file->cur_line->forw;
-
- redraw_screen();
- position_cursor();
-
  return 0;
 }
 
@@ -1421,6 +1339,8 @@ int
 move_down_half_screen()
 {
  move_down((_winbot - _wintop) / 2);
+ redraw_screen();
+ position_cursor();
  return 0;
 }
 
@@ -1429,16 +1349,8 @@ int
 move_up(int n)
 {
  int i;
-
- if( file->cur_line == NULL )
-	return 0;
-
  for( i = 0; i < n && file->cur_line->backw; i++)
 	file->cur_line = file->cur_line->backw;
- 
- redraw_screen();
- position_cursor();
-
  return 0;
 }
 
@@ -1447,6 +1359,8 @@ int
 move_up_half_screen()
 {
  move_up((_winbot - _wintop) / 2);
+ redraw_screen();
+ position_cursor();
  return 0;
 }
 
@@ -1455,9 +1369,6 @@ int
 move_down_smooth(int n)
 {
  int i;
-
- if (file->cur_line == NULL)
-	return 0;
 
  for( i = 0; i < n && file->cur_line->forw; i++) {
 //	reset();
@@ -1474,9 +1385,6 @@ int
 move_up_smooth(int n)
 {
  int i;
-
- if( file->cur_line == NULL )
-	return 0;
 
  for( i = 0; i < n && file->cur_line->backw; i++) {
 //	reset();
@@ -1508,8 +1416,6 @@ move_up_one()
 int
 move_up_block()
 {
- if (file->cur_line == NULL) return 0;
-
  do {
 	if (file->cur_line->backw == NULL) return 0;
 	file->cur_line = file->cur_line->backw; 
@@ -1524,8 +1430,6 @@ move_up_block()
 int
 move_down_block()
 {
- if (file->cur_line == NULL) return 0;
-
  do {
 	if (file->cur_line->forw == NULL) return 0;
 	file->cur_line = file->cur_line->forw; 
@@ -1540,8 +1444,6 @@ move_down_block()
 int
 move_first()
 {
- if(!file->cur_line) return 1;
-
  while( file->cur_line->backw != NULL )
 	file->cur_line = file->cur_line->backw;
  redraw_screen();
@@ -1552,8 +1454,6 @@ move_first()
 int
 move_last()
 {
- if(!file->cur_line) return 1;
-
  while( file->cur_line->forw != NULL )
 	file->cur_line = file->cur_line->forw;
  redraw_screen();
@@ -1583,8 +1483,6 @@ reset()
 int
 move_first_col()
 {
- if(!file->cur_line) return 1;
-
  file->offs = 0;
  file->x_curs = 1;
  file->cur_line->x = 1;
@@ -1597,14 +1495,12 @@ move_first_col()
 int
 move_last_col()
 {
-if ( !file->cur_line )
-	return 0;
-
  move_forward(file->cur_line->len);
  return 0;
 }
 
 
+#if 0
 int
 move_forward1(int n)
 {
@@ -1633,13 +1529,12 @@ move_forward1(int n)
  }
   return 0;
 }
+#endif
 
 
 int
 move_forward(int n)
 {
- if (!file->cur_line) return 1;
-
  int i;
  int need_reprint = 0;
 
@@ -1676,7 +1571,7 @@ move_forward_one()
 int
 move_forward_hs()
 {
- move_forward(15);
+ move_forward(10);
  return 0;
 }
 
@@ -1749,7 +1644,7 @@ move_backward_one()
 int
 move_backward_hs()
 {
- move_backward(15);
+ move_backward(10);
  return 0;
 }
 
@@ -1825,8 +1720,6 @@ get_eow()
 int
 move_bow()
 {
- if(!file->cur_line) return 1;
-
  int i = 0;
  i = get_bow();
  move_first_col();
@@ -1837,8 +1730,6 @@ move_bow()
 int
 move_eow()
 {
- if(!file->cur_line) return 1;
-
  int i = 0;
  i = get_eow();
  move_first_col();
@@ -1849,8 +1740,6 @@ move_eow()
 int
 del_word()
 {
-if( !file->cur_line )
-	return 0;
 
  int i, to;
 
@@ -1895,8 +1784,8 @@ print_top_line()
 	if (pr_line->backw == NULL) return;
 	pr_line = pr_line->backw; 
  }
- print_color_line(pr_line, _wintop);
-// print_line_x_color(pr_line->x, _wintop, pr_line->str, pr_line->color);
+// print_color_line(pr_line, _wintop);
+ print_line_x_color(pr_line->x, _wintop, pr_line->str, pr_line->color);
 }
 
 
@@ -1910,8 +1799,8 @@ print_bottom_line()
 	if (pr_line->forw == NULL) return;
 	pr_line = pr_line->forw; 
  }
- print_color_line(pr_line, _winbot);
-// print_line_x_color(pr_line->x, _winbot, pr_line->str, pr_line->color);
+// print_color_line(pr_line, _winbot);
+ print_line_x_color(pr_line->x, _winbot, pr_line->str, pr_line->color);
 }
 
 
@@ -2049,7 +1938,7 @@ print_line_x_color(int o, int line, char *str, int col)
 int
 print_color_line(line_t* l, int pos)
 {
- print_line_x_color(l->x, pos, l->str, l->color);
+// print_line_x_color(l->x, pos, l->str, l->color);
  return 0;
 }
 
@@ -2057,11 +1946,11 @@ print_color_line(line_t* l, int pos)
 int
 print_cur_line()
 {
-/*
+
  print_line_x_color(file->cur_line->x, _wincur, file->cur_line->str,
 			file->cur_line->color);
-*/
- print_color_line(file->cur_line, _wincur);
+
+// print_color_line(file->cur_line, _wincur);
  return 0;
 }
 
@@ -2108,13 +1997,14 @@ sprintf(msg, "%s", ln->str);
 gmessage(msg);
 */
  }
-// print_line_x_color(ln->x, n+i, ln->str, ln->color);
- print_color_line(ln, n+i);
+ print_line_x_color(ln->x, n+i, ln->str, ln->color);
+// print_color_line(ln, n+i);
  moveyx(_wincur, file->x_curs);
 }
 
+char* 
+find_ss (char* s, char *t) {	//skip spaces
 /* very old function */
-char* find_ss (char* s, char *t) {	//skip spaces
 
 if (s == NULL) 
 {
@@ -2419,9 +2309,6 @@ alt_refind()
 int
 search_and_replace(line_t* start_srch, line_t* end_srch, int name)
 {
- if (file->cur_line == NULL)
-	return 0;
-
  int i;
  int len, s_len, r_len, o;
  char *pos;
@@ -2479,8 +2366,10 @@ cmd_replace_global()
  getstring(s_buf, "Search:");
  getstring(r_buf, "Replace:");
  for(file = file; file->prev; file = file->prev);
- for(;file; file = file->next)
+ for(;file; file = file->next) {
+	if (file->cur_line == NULL) continue;
  	search_and_replace(get_head(), get_tail(), 0);
+ }
  file = tmp;
  redraw_screen();
  return 0;
@@ -2494,8 +2383,10 @@ cmd_replace_global2()
  getstring(s_buf, "Search:");
  getstring(r_buf, "Replace:");
  for(file = file; file->prev; file = file->prev);
- for(;file; file = file->next)
+ for(;file; file = file->next) {
+	if (file->cur_line == NULL) continue;
  	search_and_replace(get_head(), get_tail(), 1);
+ }
  file = tmp;
  redraw_screen();
  return 0;
@@ -2505,11 +2396,6 @@ cmd_replace_global2()
 int
 cmd_replace_marks()
 {
- int i;
- i = auto_set_mark();
-
- if ( i ) return 1;
-
  getstring(s_buf, "Search:");
  getstring(r_buf, "Replace:");
  search_and_replace (file->copy_start_pos, file->copy_end_pos, 0);
@@ -2533,11 +2419,6 @@ cmd_replace_whole2()
 int
 cmd_replace_marks2()
 {
- int i;
- i = auto_set_mark();
-
- if ( i ) return 1;
-
  getstring(s_buf, "Search:");
  getstring(r_buf, "Replace:");
  search_and_replace (file->copy_start_pos, file->copy_end_pos, 1);
@@ -2558,11 +2439,6 @@ cmd_repeat_repl_whole()
 int
 cmd_repeat_repl_marks()
 {
- int i;
- i = auto_set_mark();
-
- if ( i ) return 1;
-
  search_and_replace (file->copy_start_pos, file->copy_end_pos, 0);
  redraw_screen();
  return 0;
@@ -2581,11 +2457,6 @@ cmd_repeat_repl_whole2()
 int
 cmd_repeat_repl_marks2()
 {
- int i;
- i = auto_set_mark();
-
- if ( i ) return 1;
-
  search_and_replace (file->copy_start_pos, file->copy_end_pos, 1);
  redraw_screen();
  return 0;
@@ -2989,10 +2860,6 @@ arrange_markers(line_t** m1, line_t** m2)
 int
 cmd_yank()
 {
- int i;
- i = auto_set_mark();
- if (i) return 0;
-
  free_lines( copy_buffer_head, NULL);
 
  copy_lines( file->copy_start_pos, file->copy_end_pos, 
@@ -3118,9 +2985,6 @@ cmd_del_block()
 {
  if (!file->cur_line)
 	return 1;
- int i;
- i = auto_set_mark();
- if (!i)
  del_lines(file->copy_start_pos, file->copy_end_pos);
  return 0;
 }
@@ -3129,12 +2993,6 @@ cmd_del_block()
 int
 cmd_del_line()
 {
- if (!file->cur_line)
-	return 1;
- int i;
- set_mark1();
- i = auto_set_mark();
- if (!i)
  del_lines(file->cur_line, file->cur_line);
  return 0;
 }
@@ -3562,9 +3420,6 @@ change_color(int col)
 int
 cmd_change_color()
 {
-	int i = auto_set_mark();
-	if (i) return 0;
-
 	char ch_col_ch = getchar();
 	switch (ch_col_ch) {
 	case '0':

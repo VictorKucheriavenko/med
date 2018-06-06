@@ -134,7 +134,7 @@ make_commands() {
  newcom(K_INS_MOD, ALT_FLAG, OFF, insert_string);
  newcom(K_INS_MOD, ALT_FLAG, ON, insert_string_after);
  newcom(K_INS_MOD1, ALT_FLAG, OFF, cmd_edit_new_line_after);
- newcom(K_INS_MOD1, ALT_FLAG, ON, cmd_edit_new_line_before);
+ newcom(K_INS_MOD1, ALT_FLAG, ON, cmd_edit_new_line_before); /* bug!!! */
  newcom(K_INS_PREPEND, 0, OFF, cmd_edit_line_begin);
  newcom(K_INS_APPEND, 0, OFF, cmd_edit_line_end);
  newcom(K_INS_INDENT, 0, OFF, insert_indent);
@@ -195,6 +195,7 @@ command(char* str) {
 
 func_t 
 command_char(char ch) {
+ int i = 0;
  Cmd *cmd;
  Cmd *head = gethead();
  int (*pfunc)() = NULL;
@@ -204,10 +205,75 @@ command_char(char ch) {
 		if ( ((((cmd_mask & cmd->flag) == cmd->flag) && (cmd->status == ON)) 
 			|| (((cmd_mask & cmd->flag) == 0) && (cmd->status == OFF))) )
 			pfunc = cmd->noargsfunc;
+ if (file->cur_line == NULL)
+ if (pfunc == del_char || pfunc == case_word
+	|| pfunc == case_backward
+	|| pfunc == case_char
+	|| pfunc == move_word_back
+	|| pfunc == insert_indent
+	|| pfunc == insert_string
+	|| pfunc == insert_string_after
+	|| pfunc == cmd_edit_line_begin
+	|| pfunc == cmd_edit_line_end
+	|| pfunc == concat_lines
+	|| pfunc == change_char
+	|| pfunc == insert_space
+	|| pfunc == insert_char
+	|| pfunc == insert_char_next
+	|| pfunc == move_down_half_screen
+	|| pfunc == move_up_half_screen
+	|| pfunc == move_down_one
+	|| pfunc == move_up_one
+	|| pfunc == move_up_block
+	|| pfunc == move_down_block
+	|| pfunc == move_first
+	|| pfunc == move_last
+	|| pfunc == move_first_col
+	|| pfunc == move_last_col
+	|| pfunc == move_forward_one
+	|| pfunc == move_forward_hs
+	|| pfunc == move_backward_one
+	|| pfunc == move_backward_hs
+	|| pfunc == move_bow
+	|| pfunc == move_eow
+	|| pfunc == del_word
+	|| pfunc == cmd_del_word
+	|| pfunc == cmd_change_word
+	|| pfunc == cmd_simple_find
+	|| pfunc == cmd_find_name
+	|| pfunc == cmd_find_beginning
+	|| pfunc == refind
+	|| pfunc == alt_refind
+	|| pfunc == cmd_replace_marks
+	|| pfunc == cmd_replace_whole
+	|| pfunc == cmd_replace_marks2
+	|| pfunc == cmd_replace_whole2
+	|| pfunc == cmd_repeat_repl_marks
+	|| pfunc == cmd_repeat_repl_marks2
+	|| pfunc == cmd_repeat_repl_whole
+	|| pfunc == cmd_repeat_repl_whole2
+	|| pfunc == go_mark_next
+	|| pfunc == go_mark_prev
+	|| pfunc == go_mark_last
+	|| pfunc == cmd_yank
 /*
- if (pfunc)
-	pfunc();
+	|| pfunc == 
+	|| pfunc == 
+	|| pfunc == 
+	|| pfunc == 
+	|| pfunc == 
+	|| pfunc == 
 */
+	)
+	return;
+
+ if (pfunc == insert_indent || pfunc == cmd_replace_marks
+	|| pfunc == cmd_replace_marks2 || pfunc == cmd_repeat_repl_marks
+	|| pfunc == cmd_repeat_repl_marks2 || pfunc == cmd_yank
+	|| pfunc == cmd_del_block || pfunc == cmd_change_color)
+	i = auto_set_mark();
+ if (i) return;
+
 /*  undo */
  if (pfunc == insert_char || pfunc == insert_char_next || 
 	pfunc == change_char || pfunc == insert_space)
@@ -218,19 +284,21 @@ command_char(char ch) {
 	fill_undo(REPLACE, file->cur_line, file->cur_line, file->cur_line->backw,
 						file->cur_line->backw, file->cur_line->forw);
 
+ if (file->cur_line)
  if (pfunc == cmd_edit_new_line_after)
 	fill_undo(DELETE, NULL, NULL, NULL, file->cur_line, file->cur_line->forw);
 
- if (pfunc == cmd_edit_new_line_before) /* bug */
+ if (file->cur_line)
+ if (pfunc == cmd_edit_new_line_before) // bug!!!!!!
 	fill_undo(DELETE, NULL, NULL, NULL, file->cur_line->backw, file->cur_line);
 
 /*
- newcom(K_DELLINE, 0, OFF, cmd_del_line);
- i = arrange_markers(&file->copy_start_pos, &file->copy_end_pos);
-*/
  if (pfunc == cmd_del_line)
 	fill_undo(INSERT, file->copy_start_pos, file->copy_end_pos,
 					file->copy_start_pos->backw, NULL, NULL);  
+*/
+ if (pfunc)
+ pfunc();
  return pfunc;
 }
 
