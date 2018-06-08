@@ -2966,8 +2966,6 @@ delete(line_t *l, line_t *m)
 int
 del_lines(line_t *l, line_t *m)
 {
-message("del_lines:start");
-fprintf(erlog, "del_lines:start\n");
  if(!l || !m) return 1;
 /*
  line_t *l = file->copy_start_pos;
@@ -2982,11 +2980,7 @@ fprintf(erlog, "del_lines:start\n");
 
  assert(l != NULL && m != NULL);
 
-message("del_lines:middle");
-fprintf(erlog, "del_lines:middle\n");
  cmd_yank();
-message("del_lines:cmd_yank");
-fprintf(erlog, "del_lines:cmd_yank\n");
 
  free_lines(l, m);
  if(prev)
@@ -2999,8 +2993,6 @@ fprintf(erlog, "del_lines:cmd_yank\n");
  else
  file->cur_line = prev;
  redraw_screen();
-message("del_lines:end");
-fprintf(erlog, "del_lines:end\n");
  return 0;
 }
 
@@ -3035,31 +3027,16 @@ free_lines(line_t *l, line_t *m)
 {
 sprintf(msg, "%p, %p", l, m);
 
-// if(!l)	return 0;
+ if(!l)	return 0;
 
  line_t *next;
  while( l != NULL && l != m ) {
 	next = l->forw;
 	free( l->str );
-fprintf(erlog, "prev: %p, this: %p next: %p\n", l->backw, l, l->forw);
-fprintf(erlog,"1:l: %p, m: %p\n", l, m);
-/*
-fprintf(erlog, "%p\n", l);
-*/
-//fprintf(erlog, "%s", l->str);
-fprintf(erlog, "\n");
-//fprintf(erlog, "debug\n");
-fflush(erlog);
-//fflush(erlog);
-message("l");
 	free( l );
-message("passed");
 	l = next;
-fprintf(erlog,"2:l: %p, m: %p\n", l, m);
-fflush(erlog);
  }
  return 0;
-//free in sig_handler commented
 }
 
 #if 0
@@ -3274,10 +3251,8 @@ sig_handler()
 {
  int i, y, x;
  write_key_pressed();
-/*
  freecommands();
  freecommands_str();
-*/
  getpos(&y, &x);
  set_scroll_win(1, _rows);
  _wintop = 1;
