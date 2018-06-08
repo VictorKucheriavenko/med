@@ -55,6 +55,7 @@ int make_commands();
 #define scroll_up() ( printf("\033[25;H\033D\033[13;H") )
 */
 
+/**** global variables *****/
 
 Cmd *cmd_head;
 Cmd_str* cmd_str_head;
@@ -88,6 +89,7 @@ char r_buf[MAX_LINE];
 int key_pressed[256];
 int key_stat[256];
 //int key_pressed[256]={0};
+FILE *erlog;
 
 
 int
@@ -95,6 +97,11 @@ main( int argn, char *argv[])
 {
  if (argn == 1)
 	return 0;
+
+// erlog = fopen("error.txt", "a");
+ erlog = fopen("/dev/null", "w");
+ fprintf(erlog, "*********************************\n");
+// fflush(erlog);
 
  int i;
  char c;
@@ -202,7 +209,7 @@ loop:
 	if( key_valid ) {
 		key_pressed[com_key]++;
 	}
-	sprintf(msg, "%x, %d(%d/%d)", com_key, key_pressed[com_key] + key_stat[com_key], key_stat[com_key], key_pressed[com_key]);
+	sprintf(msg, "%x[%c], %d(%d/%d)", com_key, com_key, key_pressed[com_key] + key_stat[com_key], key_stat[com_key], key_pressed[com_key]);
 	key_valid = 1;
 
 	if (need_goto == 1) goto loop;
@@ -2467,6 +2474,7 @@ int
 copy_lines(line_t *start, line_t *end, line_t **buf_head, line_t **buf_tail)
 {
 
+fprintf(erlog, "copy_lines:start\n");
  line_t *source = start;
  line_t *dest = NULL;
 
@@ -2480,6 +2488,7 @@ copy_lines(line_t *start, line_t *end, line_t **buf_head, line_t **buf_tail)
  dest->color = 0;
  source = source->forw;
  *buf_head = dest;
+fprintf(erlog, "copy_lines:middle\n");
  while( source != end->forw ) {
 	dest = make_line_after(dest);
 	dest->str = malloc( strlen( source->str ) + 1 );
@@ -2490,7 +2499,7 @@ copy_lines(line_t *start, line_t *end, line_t **buf_head, line_t **buf_tail)
 	source = source->forw;
  }
  *buf_tail = dest;
- message("copy_lines... DONE");
+fprintf(erlog, "copy_lines:end\n");
  return 0;
 }
 
@@ -2498,7 +2507,7 @@ copy_lines(line_t *start, line_t *end, line_t **buf_head, line_t **buf_tail)
 int
 insert_lines(line_t *place, line_t *buf_head, line_t *buf_tail)
 {
- if (!place) insert_lines_before(get_head(), buf_head, buf_tail);
+// if (!place) insert_lines_before(get_head(), buf_head, buf_tail);//bad recursion
  if( !place || !buf_head || !buf_tail ) return 1;
 
  line_t *tmp;
@@ -2516,7 +2525,7 @@ insert_lines(line_t *place, line_t *buf_head, line_t *buf_tail)
 int
 insert_lines_before(line_t *place, line_t *buf_head, line_t *buf_tail)
 {
- if (!place) insert_lines(get_tail(), buf_head, buf_tail);
+// if (!place) insert_lines(get_tail(), buf_head, buf_tail);//bad recursion
  if( !place || !buf_head || !buf_tail ) return 1;
 
  line_t *tmp;
@@ -2860,10 +2869,17 @@ arrange_markers(line_t** m1, line_t** m2)
 int
 cmd_yank()
 {
+fprintf(erlog, "cmd_yank:start\n");
  free_lines( copy_buffer_head, NULL);
+fprintf(erlog, "cmd_yank:free_lines\n");
+//here
+ copy_buffer_head = NULL;
+ copy_buffer_tail = NULL;
 
  copy_lines( file->copy_start_pos, file->copy_end_pos, 
 		&copy_buffer_head, &copy_buffer_tail );
+fprintf(erlog, "cmd_yank:end\n");
+//fflush(erlog);
  return 0;
 }
 
@@ -2950,6 +2966,9 @@ delete(line_t *l, line_t *m)
 int
 del_lines(line_t *l, line_t *m)
 {
+message("del_lines:start");
+fprintf(erlog, "del_lines:start\n");
+ if(!l || !m) return 1;
 /*
  line_t *l = file->copy_start_pos;
  line_t *m = file->copy_end_pos;
@@ -2963,7 +2982,11 @@ del_lines(line_t *l, line_t *m)
 
  assert(l != NULL && m != NULL);
 
+message("del_lines:middle");
+fprintf(erlog, "del_lines:middle\n");
  cmd_yank();
+message("del_lines:cmd_yank");
+fprintf(erlog, "del_lines:cmd_yank\n");
 
  free_lines(l, m);
  if(prev)
@@ -2976,6 +2999,8 @@ del_lines(line_t *l, line_t *m)
  else
  file->cur_line = prev;
  redraw_screen();
+message("del_lines:end");
+fprintf(erlog, "del_lines:end\n");
  return 0;
 }
 
@@ -2993,7 +3018,14 @@ cmd_del_block()
 int
 cmd_del_line()
 {
- del_lines(file->cur_line, file->cur_line);
+
+
+ file->copy_start_pos = file->cur_line;
+ file->copy_end_pos = file->cur_line;
+
+
+// del_lines(file->cur_line, file->cur_line);
+ del_lines(file->copy_start_pos, file->copy_end_pos);
  return 0;
 }
 
@@ -3001,11 +3033,39 @@ cmd_del_line()
 int 
 free_lines(line_t *l, line_t *m)
 {
-/*
 sprintf(msg, "%p, %p", l, m);
- if(!l || !m)
-	return 0;
+
+// if(!l)	return 0;
+
+ line_t *next;
+ while( l != NULL && l != m ) {
+	next = l->forw;
+	free( l->str );
+fprintf(erlog, "prev: %p, this: %p next: %p\n", l->backw, l, l->forw);
+fprintf(erlog,"1:l: %p, m: %p\n", l, m);
+/*
+fprintf(erlog, "%p\n", l);
 */
+//fprintf(erlog, "%s", l->str);
+fprintf(erlog, "\n");
+//fprintf(erlog, "debug\n");
+fflush(erlog);
+//fflush(erlog);
+message("l");
+	free( l );
+message("passed");
+	l = next;
+fprintf(erlog,"2:l: %p, m: %p\n", l, m);
+fflush(erlog);
+ }
+ return 0;
+//free in sig_handler commented
+}
+
+#if 0
+int 
+free_lines(line_t *l, line_t *m)
+{
  line_t *next;
  while( l != NULL && l != m ) {
 	next = l->forw;
@@ -3015,6 +3075,7 @@ sprintf(msg, "%p, %p", l, m);
  }
  return 0;
 }
+#endif
 
 
 int
@@ -3213,8 +3274,10 @@ sig_handler()
 {
  int i, y, x;
  write_key_pressed();
+/*
  freecommands();
  freecommands_str();
+*/
  getpos(&y, &x);
  set_scroll_win(1, _rows);
  _wintop = 1;
@@ -3224,6 +3287,7 @@ sig_handler()
  	scroll_up();
  setecho();
  setcanon();
+ fclose(erlog);
  printf("sig_handler()\n");
 }
 
@@ -3461,5 +3525,59 @@ cmd_dead_key_pressed()
  sprintf(msg, "%d", cmd_mask); message(msg);
  sprintf(msg, "_switch...: %d", _switch_key_mode); message(msg);
  need_goto = 1;
+ return 0;
+}
+
+int
+cmd_open(int argn, char** argv)
+{
+ if (argn == 1)
+	return 0;
+
+ int i;
+ buffer_t *tmp;
+
+ last_file = file;
+
+ if (argv[1][0] != '-')
+	options = 0;
+ else {
+	options = 1;
+	for (i = 0; argv[1][i] != '\0'; i++)
+		switch (argv[1][i]) {
+		case 'c':
+			create_f = 1;
+			break;
+		default:
+			break;
+		}
+ }
+ if (options == 1)
+	i = 2;
+ else
+	i = 1;
+ for( ; i < argn; i++)
+ 	open_file(argv[i]);
+
+	create_f = 0;
+
+ redraw_screen();
+ return 0;
+}
+
+
+int
+cmd_rename(int argn, char** argv)
+{
+ if (argn != 2)
+	return 1;
+
+ int ret;
+
+ ret = rename(file->filename, argv[1]); 
+ if(ret != 0) return 1;
+ strcpy(file->filename, argv[1]);
+
+ redraw_screen();
  return 0;
 }

@@ -37,6 +37,7 @@ make_commands() {
 
  newcom_str("tab", &set_tab );
  newcom_str("open o", &cmd_open );
+ newcom_str("rename ren", &cmd_rename );
 
 /* start edit*/
 
@@ -196,6 +197,7 @@ command(char* str) {
 func_t 
 command_char(char ch) {
  int i = 0;
+ int ret = 1;
  Cmd *cmd;
  Cmd *head = gethead();
  int (*pfunc)() = NULL;
@@ -205,6 +207,7 @@ command_char(char ch) {
 		if ( ((((cmd_mask & cmd->flag) == cmd->flag) && (cmd->status == ON)) 
 			|| (((cmd_mask & cmd->flag) == 0) && (cmd->status == OFF))) )
 			pfunc = cmd->noargsfunc;
+
  if (file->cur_line == NULL)
  if (pfunc == del_char || pfunc == case_word
 	|| pfunc == case_backward
@@ -256,6 +259,7 @@ command_char(char ch) {
 	|| pfunc == go_mark_prev
 	|| pfunc == go_mark_last
 	|| pfunc == cmd_yank
+	|| pfunc == cmd_del_line
 /*
 	|| pfunc == 
 	|| pfunc == 
@@ -265,12 +269,15 @@ command_char(char ch) {
 	|| pfunc == 
 */
 	)
+ {
+	message("Buffer is empty!");
 	return;
+ }
 
- if (pfunc == insert_indent || pfunc == cmd_replace_marks
+ if ( pfunc == insert_indent || pfunc == cmd_replace_marks
 	|| pfunc == cmd_replace_marks2 || pfunc == cmd_repeat_repl_marks
 	|| pfunc == cmd_repeat_repl_marks2 || pfunc == cmd_yank
-	|| pfunc == cmd_del_block || pfunc == cmd_change_color)
+	|| pfunc == cmd_del_block || pfunc == cmd_change_color )
 	i = auto_set_mark();
  if (i) return;
 
@@ -424,42 +431,5 @@ set_tab(int argn , char** argv)
  redraw_screen();
  sprintf(msg, "_tabs: %d",  _tabs);
  message(msg);
- return 0;
-}
-
-int
-cmd_open(int argn, char** argv)
-{
- if (argn == 1)
-	return 0;
-
- int i;
- buffer_t *tmp;
-
- last_file = file;
-
- if (argv[1][0] != '-')
-	options = 0;
- else {
-	options = 1;
-	for (i = 0; argv[1][i] != '\0'; i++)
-		switch (argv[1][i]) {
-		case 'c':
-			create_f = 1;
-			break;
-		default:
-			break;
-		}
- }
- if (options == 1)
-	i = 2;
- else
-	i = 1;
- for( ; i < argn; i++)
- 	open_file(argv[i]);
-
-	create_f = 0;
-
- redraw_screen();
  return 0;
 }
