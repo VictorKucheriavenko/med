@@ -731,9 +731,11 @@ insert_string()
 //		moveyx(_wincur, file->x_curs);
 	
 		redraw_screen();
+		/*
 		sprintf(msg, "case 10: offs: %d, tmp_offs: %d, x_curs: %d\n", 
 					file->offs, tmp_offs, file->x_curs);
 		message(msg);
+		*/
 		break;
 
  	case 'u'-0x60:
