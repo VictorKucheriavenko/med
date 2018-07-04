@@ -1,3 +1,4 @@
+#define LOG 0
 int make_commands();
 
 #define _GNU_SOURCE
@@ -102,8 +103,10 @@ main( int argn, char *argv[])
  if (argn == 1)
 	return 0;
 
- erlog = fopen("error.txt", "w");
-// erlog = fopen("/dev/null", "w");
+ if (LOG == 1)
+	erlog = fopen("error.txt", "w");
+ else
+	erlog = fopen("/dev/null", "w");
  fprintf(erlog, "*********************************\n");
  fflush(erlog);
 
@@ -711,10 +714,13 @@ insert_string()
 		tmp_offs = file->offs;
 		file->offs = 0;
 		file->x_curs = 1;
-		fpr = 1;
+//		fpr = 1;
 		move_forward(tmp_offs+1);
-		file->offs++;
-		force_forward(1);
+		if(file->cur_line->str[file->offs] != '\0')
+		{
+			force_forward(1);
+			file->offs++;
+		}
 
 /*
 		fprintf(erlog, "case 10: offs: %d, x_curs: %d\n", 
@@ -1618,8 +1624,8 @@ force_forward(int n)
  file->cur_line->len = cur_len();
 
  if(fpr == 1) {
-		fprintf(erlog, "mv_forw: n: %d\n", n);
-		fprintf(erlog, "mv_forw: cur_line->len: %d\n", file->cur_line->len);
+		fprintf(erlog, "force_forw: n: %d\n", n);
+		fprintf(erlog, "force_forw: cur_line->len: %d\n", file->cur_line->len);
 		fflush(erlog);
  }
 
@@ -1627,7 +1633,7 @@ force_forward(int n)
 /* if ( file->offs + 1 < file->cur_line->len ) */{ 
 
  if(fpr == 1) {
-		fprintf(erlog, "mv_forw: offs: %d, x_curs: %d char: %c\n", file->offs, file->x_curs,
+		fprintf(erlog, "force_forw: offs:%d, x_curs:%d char:%d\n", file->offs, file->x_curs,
 		file->cur_line->str[file->offs]);
 		fflush(erlog);
  }
