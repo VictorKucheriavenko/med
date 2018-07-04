@@ -35,9 +35,11 @@ int cmd_open(int argn, char** argv);
 int 
 make_commands() {
 
- newcom_str("tab", &set_tab );
- newcom_str("open o", &cmd_open );
- newcom_str("rename ren", &cmd_rename );
+ newcom_str("tab", &set_tab);
+ newcom_str("open o", &cmd_open);
+ newcom_str("rename ren", &cmd_rename);
+ newcom_str("jump j", &set_jump);
+ newcom_str("ind indent", &set_autoindent);
 
 /* start edit*/
 
@@ -426,6 +428,7 @@ set_tab(int argn , char** argv)
  if(argn != 2) return 0;
 
  i = atoi(argv[1]); 
+ if (i > 80) i = 80;
  if (i)
  _tabs = i;
  redraw_screen();

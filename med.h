@@ -11,6 +11,7 @@
 #define NROWS 25
 #define X_MODE_ 23 
 
+//#define BAK_CUR_FOLDER
  
 #define ESC 27
 #define BCSP 0x7f

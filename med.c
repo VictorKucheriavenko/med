@@ -12,6 +12,7 @@ int make_commands();
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <termios.h>
+#include <sys/stat.h>
 #include "colors.h"
 //#include "find.h"
 #include "med.h"
@@ -57,6 +58,7 @@ int make_commands();
 
 /**** global variables *****/
 
+int fpr;
 Cmd *cmd_head;
 Cmd_str* cmd_str_head;
 int cmd_mask;
@@ -71,6 +73,8 @@ int _cols, _rows;
 int _wintop, _winbot, _wincur;
 int _width;
 int _h_scroll = 15;
+int vert_jmp = 12;
+int autoindent = 1;
 
 int (*pfind)() = &simple_find;
 
@@ -98,10 +102,10 @@ main( int argn, char *argv[])
  if (argn == 1)
 	return 0;
 
-// erlog = fopen("error.txt", "a");
+// erlog = fopen("error.txt", "w");
  erlog = fopen("/dev/null", "w");
  fprintf(erlog, "*********************************\n");
-// fflush(erlog);
+ fflush(erlog);
 
  int i;
  char c;
@@ -133,6 +137,7 @@ main( int argn, char *argv[])
 cmd_mask = 0;
 
  _tabs = 4;
+
  int key_valid = 1;
  for(i = 0; i < 256; i++) {
  	key_pressed[i] = 0;
@@ -190,6 +195,8 @@ cmd_mask = 0;
  _wincur = ( _winbot - _wintop ) / 2 + _wintop;
 
  set_scroll_win(_wintop, _winbot);
+
+ vert_jmp = (_winbot - _wintop) / 2;
 
  moveyx(_wincur, 1);
  redraw_screen();
@@ -662,6 +669,7 @@ insert_string()
  char ch;
  char *tmp;
  int tmp_len = 0;
+ int tmp_offs;
 
  setnocanon();
  setnoecho();
@@ -692,19 +700,32 @@ insert_string()
 		tmp = file->cur_line->str + file->offs;
 		tmp_len = strlen(tmp);
 			file->cur_line = make_line_after(file->cur_line);
-		file->cur_line->x = 1;
-		if (file->cur_line->backw->color);
-		file->cur_line->color = file->cur_line->backw->color;
-		file->cur_line->str = malloc( tmp_len + 1 );
-		strcpy(file->cur_line->str, tmp);
+		file->offs = init_line(file->cur_line);
+		
+		file->cur_line->str = realloc(file->cur_line->str,
+			strlen(file->cur_line->str) + tmp_len + 1 );
+		strcat(file->cur_line->str, tmp);
 		file->cur_line->backw->str =
 			realloc( file->cur_line->backw->str, file->cur_line->backw->len - tmp_len+1 );
-			file->cur_line->backw->str[file->cur_line->backw->len - tmp_len] = 0;
+		file->cur_line->backw->str[file->cur_line->backw->len - tmp_len] = 0;
+		tmp_offs = file->offs;
 		file->offs = 0;
 		file->x_curs = 1;
-		moveyx(_wincur, file->x_curs);
+//		fpr = 1;
+		move_forward(tmp_offs--);
+
+/*
+		fprintf(erlog, "case 10: offs: %d, x_curs: %d\n", 
+				file->offs, file->x_curs);
+		fflush(erlog);
+*/
+
+//		moveyx(_wincur, file->x_curs);
 	
 		redraw_screen();
+		sprintf(msg, "case 10: offs: %d, tmp_offs: %d, x_curs: %d\n", 
+					file->offs, tmp_offs, file->x_curs);
+		message(msg);
 		break;
 
  	case 'u'-0x60:
@@ -715,11 +736,8 @@ insert_string()
  		if (!isprint(ch) && ch != '\t')
 			break;
 		insert_ch(&file->cur_line->str, file->offs, ch);
-		if(ch == '\t') {
+		if(ch == '\t')
 			file->x_curs = nexttab1();
-			sprintf(msg, "nexttab():%d, file->x_curs:%d", nexttab(), file->x_curs );
-			message(msg);
-		}
 		else
 			file->x_curs++;
 		file->offs++;
@@ -751,9 +769,17 @@ int
 insert_string_after()
 {
  int ret;
+ if (*file->cur_line->str == '\0') {
+	ret = insert_string();
+	return 0;
+ }
  save_cur();
+// move_forward(1);
+ if (file->cur_line->str[file->offs] == '\t')
+	file->x_curs = nexttab1();
+ else
+	file->x_curs++;//TAB??
  file->offs++;
- file->x_curs++;
  moveyx(file->y_cur, file->x_curs);
  ret = insert_string();
  file->offs--;
@@ -782,8 +808,10 @@ cmd_edit_new_line_after()
  file->cur_line = make_line_after(file->cur_line);
  init_line(file->cur_line);
  reset();
+ move_last_col();
  redraw_screen(); //need partial scroll
- insert_string();
+// insert_string();
+ cmd_edit_line_end();
  redraw_screen();
  return 0;
 }
@@ -935,15 +963,26 @@ cmd_make_line_after()
 int
 init_line( line_t *ln )
 {
- ln->str = malloc(1);
- *(ln->str) = '\0';
- ln->len = 0;
+ int i;
+
+ if (ln->backw && autoindent) {
+	for (i = 0; isspace(ln->backw->str[i]); i++);
+	ln->str = malloc(i + 1);
+	ln->str[i] = '\0';
+	strncpy(ln->str, ln->backw->str, i);
+ }
+ else
+ {
+	ln->str = malloc(1);
+	*(ln->str) = '\0';
+	ln->len = 0;
+ }
  ln->x = 1;
  if (ln->backw)
 	ln->color = ln->backw->color;
  else
 	ln->color = 0;
- return 0;
+ return strlen(ln->str);
 }
 
 
@@ -1286,12 +1325,25 @@ make_backup_copy(char* fname)
  int fd1, fd2;
  int ret = -1;
  char buf[BUFSIZE];
+ char path[BUFSIZE]={0};
  int len = strlen(fname);
- char *fname2 = malloc(len+1+4);
- strcpy(fname2, fname);
- strcat(fname2, ".mbk");
+ 
+#ifndef BAK_CUR_FOLDER
+ strcpy(path, getenv("HOME"));
+ strcat(path, "/.med/");
+ if (access(path, F_OK) == -1)
+ mkdir (path, 0777);
+#endif
+  
+ strcat(path, fname);
+ strcat(path, ".mbk"); 
+ 
  fd1 = open(fname, O_RDONLY);
- fd2 = open(fname2, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+ fd2 = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+ if (fd2 < 0) {
+	sprintf(msg, "make_backup_copy: failed to open %s", path); 
+	message(msg);
+ }
  while(ret != 0) {
    ret = read(fd1, buf, BUFSIZE);
    write(fd2, buf, ret);
@@ -1303,12 +1355,16 @@ make_backup_copy(char* fname)
 
 int
 remove_backup(char* fname) {
- char buf[BUFSIZE];
- int len = strlen(fname);
- char *fname2 = malloc(len+1+4);
- strcpy(fname2, fname);
- strcat(fname2, ".mbk");
- remove(fname2);
+ char path[BUFSIZE]={0};
+ 
+#ifndef BAK_CUR_FOLDER
+ strcpy(path, getenv("HOME"));
+ strcat(path, "/.med/");
+#endif
+ 
+ strcat(path, fname);
+ strcat(path, ".mbk");
+ remove(path);
  return 0;
 }
 
@@ -1345,7 +1401,8 @@ move_down(int n)
 int
 move_down_half_screen()
 {
- move_down((_winbot - _wintop) / 2);
+// move_down((_winbot - _wintop) / 2);
+ move_down(vert_jmp);
  redraw_screen();
  position_cursor();
  return 0;
@@ -1365,7 +1422,8 @@ move_up(int n)
 int
 move_up_half_screen()
 {
- move_up((_winbot - _wintop) / 2);
+// move_up((_winbot - _wintop) / 2);
+ move_up(vert_jmp);
  redraw_screen();
  position_cursor();
  return 0;
@@ -1502,41 +1560,10 @@ move_first_col()
 int
 move_last_col()
 {
- move_forward(file->cur_line->len);
+// move_forward(file->cur_line->len);
+ move_forward(cur_len());
  return 0;
 }
-
-
-#if 0
-int
-move_forward1(int n)
-{
- if (!file->cur_line) return 1;
-
- int i;
-
- for( i = 0; i < n; i++ )
- if ( file->offs + 1 < file->cur_line->len ) { 
-	 if( *(file->cur_line->str + file->offs + 0) == '\t' ) {
-		file->x_curs = nexttab1();
-	 }
-	 else
-		file->x_curs++;
-
-	 if(file->x_curs <= _width) {
-		moveyx(_wincur, file->x_curs);
-	 }
-	 else {
-		file->cur_line->x -= _h_scroll;
-		print_cur_line();
-		file->x_curs -= _h_scroll;
-		moveyx(_wincur, file->x_curs);
-	 }
-	 file->offs++;
- }
-  return 0;
-}
-#endif
 
 
 int
@@ -1545,8 +1572,22 @@ move_forward(int n)
  int i;
  int need_reprint = 0;
 
+ file->cur_line->len = cur_len();
+
+ if(fpr == 1) {
+		fprintf(erlog, "mv_forw: n: %d\n", n);
+		fprintf(erlog, "mv_forw: cur_line->len: %d\n", file->cur_line->len);
+		fflush(erlog);
+ }
+
  for( i = 0; i < n; i++ )
  if ( file->offs + 1 < file->cur_line->len ) { 
+
+ if(fpr == 1) {
+		fprintf(erlog, "mv_forw: offs: %d, x_curs: %d char: %c\n", file->offs, file->x_curs,
+		file->cur_line->str[file->offs]);
+		fflush(erlog);
+ }
 	 if( *(file->cur_line->str + file->offs ) == '\t' )
 		file->x_curs = nexttab1();
 	 else
@@ -1679,10 +1720,8 @@ nexttab3(int x, int o)
 int
 nexttab1()
 {
- int i;
- i =  (file->x_curs + (file->cur_line->x - 1) - 1) / _tabs * _tabs + _tabs + 1
+ return (file->x_curs + (file->cur_line->x - 1) - 1) / _tabs * _tabs + _tabs + 1
 		- (file->cur_line->x - 1);
- return i;
 }
 
 
@@ -2474,7 +2513,6 @@ int
 copy_lines(line_t *start, line_t *end, line_t **buf_head, line_t **buf_tail)
 {
 
-fprintf(erlog, "copy_lines:start\n");
  line_t *source = start;
  line_t *dest = NULL;
 
@@ -2488,7 +2526,6 @@ fprintf(erlog, "copy_lines:start\n");
  dest->color = 0;
  source = source->forw;
  *buf_head = dest;
-fprintf(erlog, "copy_lines:middle\n");
  while( source != end->forw ) {
 	dest = make_line_after(dest);
 	dest->str = malloc( strlen( source->str ) + 1 );
@@ -2499,7 +2536,6 @@ fprintf(erlog, "copy_lines:middle\n");
 	source = source->forw;
  }
  *buf_tail = dest;
-fprintf(erlog, "copy_lines:end\n");
  return 0;
 }
 
@@ -2869,17 +2905,13 @@ arrange_markers(line_t** m1, line_t** m2)
 int
 cmd_yank()
 {
-fprintf(erlog, "cmd_yank:start\n");
  free_lines( copy_buffer_head, NULL);
-fprintf(erlog, "cmd_yank:free_lines\n");
 //here
  copy_buffer_head = NULL;
  copy_buffer_tail = NULL;
 
  copy_lines( file->copy_start_pos, file->copy_end_pos, 
 		&copy_buffer_head, &copy_buffer_tail );
-fprintf(erlog, "cmd_yank:end\n");
-//fflush(erlog);
  return 0;
 }
 
@@ -3555,4 +3587,51 @@ cmd_rename(int argn, char** argv)
 
  redraw_screen();
  return 0;
+}
+
+int
+set_jump(int argn, char** argv)
+{
+ if (argn != 2)
+	return 1;
+
+ int i = atoi(argv[1]);
+
+ if (i <= 0) i = vert_jmp;
+ if (i > 100) i = 100;
+
+ vert_jmp = i;
+ return 0;
+}
+
+int
+set_autoindent(int argc, char** argv)
+{
+ if (argc != 1) return 1;
+ autoindent = (autoindent) ? 0 : 1; 
+ sprintf(msg, "autoindent: %d", autoindent);
+ message(msg);
+ return 0;
+}
+
+int
+indent_cur_line()
+{
+ if (file->cur_line->backw == NULL) return 1;
+
+ int i;
+
+ for (i = 0; isspace(file->cur_line->backw->str); i++);
+ file->cur_line->str = malloc(i + 1);
+ file->cur_line->str[i] = '\0';
+ strncpy(file->cur_line->str, file->cur_line->backw->str, i);
+// move_forwart(i);
+// cmd_edit_line_end()
+
+ return 0;
+}
+
+int
+cur_len() {
+ return strlen(file->cur_line->str);
 }
