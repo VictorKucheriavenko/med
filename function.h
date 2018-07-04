@@ -74,6 +74,7 @@ int reset();
 int move_first_col();
 int move_last_col();
 int move_forward(int n);
+int force_forward(int n);
 int move_forward_one();
 int move_forward_hs();
 int move_backward1(int n);
