@@ -727,17 +727,20 @@ insert_string()
 		file->x_curs = 1;
 //		fpr = 1;
 		for (i = 0; i < tmp_offs; i++)
-			file->x_curs = get_next_move(file->offs);
-			moveyx(_wincur, file->x_curs);
+			file->x_curs = get_next_move(file->cur_line->str[i]);
+		file->offs = i;
+		moveyx(_wincur, file->x_curs);
 
+/*
 		move_forward(tmp_offs+1);
 		if(file->cur_line->str[file->offs] != '\0')
 		{
 			message("force_forward");
 			file->offs += 1;
-			file->x_curs = get_next_move(file->offs);
+			file->x_curs = get_next_move(file->cur_line->str[i]);
 			moveyx(_wincur, file->x_curs);
 		}
+*/		
 
 /*
 		fprintf(erlog, "case 10: offs: %d, x_curs: %d\n", 
@@ -845,13 +848,15 @@ cmd_edit_new_line_before()
 int
 cmd_edit_new_line_after()
 {
+ int i;
  file->cur_line = make_line_after(file->cur_line);
- init_line(file->cur_line);
- reset();
- move_last_col();
+ file->offs = init_line(file->cur_line);
+ file->x_curs = 0;
+		for (i = 0; i < file->offs; i++)
+			file->x_curs = get_next_move(file->cur_line->str[i]);
+		moveyx(_wincur, file->x_curs);
  redraw_screen(); //need partial scroll
-// insert_string();
- cmd_edit_line_end();
+ insert_string();
  redraw_screen();
  return 0;
 }
