@@ -6,6 +6,7 @@
 #define INIT_NUM 1000
 #define MAX_LINE 2048
 #define MAX_BUF 2048
+#define MAX_STACK 256
 #define BUFSIZE 2048
 #define NCOLS 80
 #define NROWS 25
@@ -37,8 +38,9 @@ typedef struct file_buffer {
 	line_t* cur_mark;
 	int offs;
 	int x_curs;
-	int x_cur;
-	int y_cur;
+	int x_cur[MAX_STACK];
+	int y_cur[MAX_STACK];
+	int top;
 	char filename[MAX_LINE];
 	int fd;
 	FILE* f;

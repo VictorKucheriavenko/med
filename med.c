@@ -303,7 +303,12 @@ invoke_command() {
 int
 save_cur() 
 {
- getpos(&file->y_cur, &file->x_cur);
+ if (file->top == MAX_STACK) {
+ 	gmessage("Stack is full!");
+	return 1;
+ } 
+ file->top++;
+ getpos(&file->y_cur[file->top], &file->x_cur[file->top]);
  return 0;
 }
 
@@ -311,7 +316,13 @@ save_cur()
 int
 rest_cur() 
 {
- moveyx(file->y_cur, file->x_cur);
+ if (file->top == -1) {
+ 	gmessage("Stack is empty!");
+	return 1;
+ }
+ moveyx(file->y_cur[file->top], file->x_cur[file->top]);
+ file->top--;
+ return 0;
 }
 
 
@@ -668,7 +679,7 @@ getstring(char* buf, char* str) {
 int
 insert_string()
 {
- int res, ret;
+ int i, res, ret;
  char ch;
  char *tmp;
  int tmp_len = 0;
@@ -715,11 +726,17 @@ insert_string()
 		file->offs = 0;
 		file->x_curs = 1;
 //		fpr = 1;
+		for (i = 0; i < tmp_offs; i++)
+			file->x_curs = get_next_move(file->offs);
+			moveyx(_wincur, file->x_curs);
+
 		move_forward(tmp_offs+1);
 		if(file->cur_line->str[file->offs] != '\0')
 		{
-			force_forward(1);
-			file->offs++;
+			message("force_forward");
+			file->offs += 1;
+			file->x_curs = get_next_move(file->offs);
+			moveyx(_wincur, file->x_curs);
 		}
 
 /*
@@ -774,6 +791,17 @@ insert_string()
  return ret; 
 }
 
+int
+get_next_move(char c)
+{
+ if (c == '\0')
+	return file->x_curs; 
+ else
+ if(c == '\t')
+	return nexttab1();
+ else
+	return file->x_curs + 1;
+}
 
 int
 insert_string_after()
@@ -788,13 +816,15 @@ insert_string_after()
  if (file->cur_line->str[file->offs] == '\t')
 	file->x_curs = nexttab1();
  else
-	file->x_curs++;//TAB??
+	file->x_curs++;
  file->offs++;
- moveyx(file->y_cur, file->x_curs);
+// moveyx(file->y_cur, file->x_curs);
+ rest_cur();
  ret = insert_string();
  file->offs--;
  file->x_curs--;
- moveyx(file->y_cur, file->x_curs);
+// moveyx(file->y_cur, file->x_curs);
+// rest_cur();
  return ret;
 }
 
@@ -1079,9 +1109,12 @@ int
 insert_char_next()
 {
  char ch = getchar();
- save_cur();
+// save_cur();
+ /*
  moveyx(file->y_cur, file->x_cur + 1);
  file->offs++;
+ */
+ move_forward(1);
  insert_ch( &file->cur_line->str, file->offs, ch);
  file->cur_line->len++;
  print_cur_line();
@@ -1179,6 +1212,7 @@ open_file(char *name) {
  file->offs = 0;
  file->x_curs = 1;
  file->fd = fd;
+ file->top = -1;
 
  strcpy(file->filename, name);
  f = fdopen(fd, "r+");
@@ -1865,6 +1899,25 @@ cmd_del_word()
 
 
 int
+del_endline()
+{
+ del( &file->cur_line->str, file->offs + 1, strlen(file->cur_line->str) );
+ print_cur_line();
+ return 0;
+}
+
+
+int
+cmd_del_endline()
+{
+ del_endline();
+ if( *(file->cur_line->str + file->offs) == 0)
+	move_backward(1);
+ return 0;
+}
+
+
+int
 cmd_change_word()
 {
  del_word();
@@ -1978,9 +2031,10 @@ int
 print_line_x_color(int o, int line, char *str, int col)
 {
  int i = 0;
- int y, x;
+// int y, x;
  int tmp;
- getpos(&y, &x);
+// getpos(&y, &x);
+ save_cur();
  moveyx(line, 1);
  printf(CLL);
  printf("\x1B[%dm", col); /* escape codes */
@@ -2027,7 +2081,8 @@ print_line_x_color(int o, int line, char *str, int col)
 	gmessage(msg);
 */
  }
- moveyx(y, x);
+// moveyx(y, x);
+ rest_cur();
 /*
  sprintf(msg, "y: %d - x: %d", y, x);
  gmessage(msg);
@@ -3660,13 +3715,19 @@ set_jump(int argn, char** argv)
 }
 
 int
-set_autoindent(int argc, char** argv)
+cmd_set_autoindent()
 {
- if (argc != 1) return 1;
  autoindent = (autoindent) ? 0 : 1; 
  sprintf(msg, "autoindent: %d", autoindent);
  message(msg);
  return 0;
+}
+
+int
+set_autoindent(int argc, char** argv)
+{
+ if (argc != 1) return 1;
+ cmd_set_autoindent();
 }
 
 int

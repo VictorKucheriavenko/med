@@ -77,6 +77,7 @@ make_commands() {
  newcom(K_KMOD, 0, OFF, cmd_switch_alt_mode);
  newcom(K_SW_ROW, 0, OFF, cmd_switch_num_row_mode);
  newcom(K_SW_SRCH, 0, OFF, cmd_switch_search_mode);
+ newcom(K_INDENT, 0, OFF, cmd_set_autoindent);
  newcom(K_CUR_UP, 0, OFF, cur_up);
  newcom(K_CUR_DOWN, 0, OFF, cur_down);
  newcom(K_M_UP, 0, OFF, move_up_one);
@@ -130,6 +131,7 @@ make_commands() {
  newcom(K_QUIT, 0, OFF, cmd_quit); 
  newcom(K_DEL, 0, OFF, del_char);
  newcom(K_DEL_WORD, 0, OFF, cmd_del_word);
+ newcom(K_DEL_ENDLINE, 0, OFF, cmd_del_endline);
  newcom(K_CHANGE_WORD, 0, OFF, cmd_change_word);
  newcom(K_CASE_WORD, 0, OFF, case_word);
  newcom(K_CASE_WORD_BACKW, 0, OFF, case_backward);
