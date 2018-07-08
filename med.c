@@ -851,7 +851,7 @@ cmd_edit_new_line_after()
  int i;
  file->cur_line = make_line_after(file->cur_line);
  file->offs = init_line(file->cur_line);
- file->x_curs = 0;
+ file->x_curs = 1;
 		for (i = 0; i < file->offs; i++)
 			file->x_curs = get_next_move(file->cur_line->str[i]);
 		moveyx(_wincur, file->x_curs);
