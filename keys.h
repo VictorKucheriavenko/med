@@ -46,76 +46,75 @@
 #define K_F_BUF_GO_9 '9'
 #define K_F_BUF_GO_0 '0'
 
-#define K_CHNG_COL C_g
+//#define K_CHNG_COL C_g
 #define K_REDRAW C_r
 
-#define K_KMOD Grave 
-#define K_KDEAD '\t'
+#define K_SW_ALT '!' 
+#define K_DEAD_TAB '\t'
 
-#define K_SW_ROW '!'
+#define K_SW_ROW Grave 
 #define K_SW_SRCH '@'
+#define K_SW_INDENT C_g
 
-#define K_GLOBAL C_t
-#define K_GLOBAL2 C_y
+#define K_GL_REPL C_t
+#define K_GL_REN C_y
 
 #define K_CUR_UP C_p
-#define K_CUR_DOWN C_n
-#define K_M_UP 'k'
-#define K_M_UP_SCR 'K'
-#define K_M_UP_START C_k
-#define K_M_DOWN 'j'
-#define K_M_DOWN_SCR 'J'
-#define K_M_DOWN_END C_h
-#define K_M_RIGHT 'f'
-#define K_M_RIGHT2 'g'
-#define K_M_RIGHT1 'I'
-#define K_GOWORD 'i'
-#define K_GOWORD1 C_b
-#define K_GOWORDBACK 'u'
-#define K_M_LEFT 'd'
-#define K_M_LEFT2 's'
-#define K_M_LEFT1 'U'
+#define K_CUR_DN C_n
+#define K_MV_UP 'k'
+#define K_MV_UP_SCR 'K'
+#define K_MV_UP_START C_k
+#define K_MV_DN 'j'
+#define K_MV_DN_SCR 'J'
+#define K_MV_DN_END C_h
+#define K_MV_R 'f'
+#define K_MV_R_END 'g'
+#define K_MV_R_N 'I'
+#define K_MV_BOW 'i'
+//#define K_MV_BOW C_v
+#define K_MV_WORDBACK 'u'
+#define K_MV_L 'd'
+#define K_MV_L_BEG 's'
+#define K_MV_L_N 'U'
 #define K_DELLINE 't'
 #define K_MKLINE 'O'
 #define K_DEL 'r'
 #define K_DEL_WORD 'e'
+#define K_DEL_ENDLINE C_e 
 #define K_CHANGE_WORD 'o'
-#define K_CASE_WORD 'X'
+#define K_CASE_WORD 'X'// unused
 #define K_CASE_WORD_BACKW C_u
 #define K_CASE_CHAR C_x
-#define K_INS_MOD 'l'
-#define K_INS_MOD1 ';'
+#define K_EDIT 'l'
+#define K_EDIT_NL ';'
 
-#define K_INS_PREPEND 'D'
-#define K_INS_APPEND 'F'
+#define K_EDIT_BEG 'D'
+#define K_EDIT_END 'F'
 
-#define K_INS_INDENT C_o
-#define K_INS_SPACE ' '
+#define K_INDENT C_o
+#define K_SPACE ' '
 #define K_INS_CHAR 'p'
 #define K_CHANGE_CHAR '['
-#define K_FIND1 '/'
-#define K_FIND2 '?'
-#define K_SRCH_RPL 'S'
+#define K_FIND '/'
+#define K_FIND_NAME '?'
+#define K_REPLACE 'S'
 #define K_REPEAT_RPL C_s
-#define K_SRCH_RPL2 'W'
-#define K_REPEAT_RPL2 C_w
+#define K_RENAME 'W'
+#define K_REPEAT_REN C_w
 #define K_REFIND 'n'
-#define K_REFIND2 'N'
+#define K_REFIND_NAME 'N'
+#define K_WRITE_BUF '\''
 #define K_WRITE_ALL '\"'
-#define K_WRITE '\''
 #define K_QUIT 'Q' 
-#define K_SET_COPY_START 'h'
+#define K_SELECT 'h'
 #define K_SET_MARK 'm'
-#define K_GO_MARK_NUMB 'c'
+#define K_GO_MARK_NUMB 'c'// unused
 #define K_COPY 'a'
 #define K_PASTE 'z'
 #define K_CONCAT 'C'
 #define K_DEL_BLOCK 'w'
-#define K_GO_LINE  'P'
-#define K_SH_BUFF C_b
-#define K_UP_BLOCK C_d
-#define K_DOWN_BLOCK C_f
+#define K_GOTO_LINE  'P'
+#define K_SHOW_BUFF C_b
+#define K_MV_UP_BLOCK C_d
+#define K_MV_DN_BLOCK C_f
 #define K_UNDO C_l
-//#define K_ENTER 10
-//#define K_EN				TER 10
-//#define K_ENTER 10

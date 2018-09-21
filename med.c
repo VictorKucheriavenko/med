@@ -1,5 +1,7 @@
 #define LOG 0
 int make_commands();
+int make_help();
+int help_comm(int argn, char** argv);
 
 #define _GNU_SOURCE
 #include <ncurses.h>
@@ -101,7 +103,12 @@ int
 main( int argn, char *argv[])
 {
  if (argn == 1)
-	return 0;
+ {
+	printf("med [-rcmh] [file...]\n"); 
+	printf("med -h for help\n"); 
+	printf("med -m for commands help\n"); 
+	return 1;
+ }
 
  if (LOG == 1)
 	erlog = fopen("error.txt", "w");
@@ -117,6 +124,9 @@ main( int argn, char *argv[])
  setvbuf(stdout, NULL, _IONBF, 0);
  setvbuf(stdin,  NULL, _IONBF, 0);
 
+ make_commands();
+ make_help();
+ 
 /* options */
 
  if (argv[1][0] != '-')
@@ -131,6 +141,16 @@ main( int argn, char *argv[])
 		case 'c':
 			create_f = 1;
 			break;
+		case 'm':
+			help_comm(0, NULL);
+			return 1;
+		case 'h':
+			printf("med [-rcmh] [file...]\n\n"); 
+			printf("-r\tOpen file in Read-Only mode.\n");
+			printf("-c\tCreate file if does not exist.\n");
+			printf("-m\tDisplay list of commands.\n");
+			printf("-h\tDisplay this help.\n");
+			return 1;
 		default:
 			break;
 		}
@@ -203,7 +223,6 @@ cmd_mask = 0;
 
  moveyx(_wincur, 1);
  redraw_screen();
- make_commands();
 
  while( 1 ) {
 loop:
@@ -612,13 +631,38 @@ insert_indent()
 
 
 int
+simple_print(int n, char* str)
+{
+ int i;
+ 
+ for (i = 0; i < n; i++)
+ {
+	if (isprint(str[i]))
+		putchar(str[i]);
+	else 
+	if (str[i] == '\t')
+	{
+		putchar('\\');
+		putchar('t');
+	}
+ }
+ return 0;
+}
+
+
+int
 readstring(char* buf, int nmax) {
  int i, tmp, res, ret;
  char ch;
+ int y, x;
 
+/*
  setnocanon();
  setnoecho();
+*/
 
+ getpos(&y, &x);
+ 
  i = 0;
  do {
 	res = read(0, &ch, 1);
@@ -631,8 +675,14 @@ readstring(char* buf, int nmax) {
 		if( i ) {
 			*(buf+i) = ch;
 			write(1, buf+i, 1);
+			write(1, " ", 1);
+			write(1, buf+i, 1);
 			if (*(buf+i-1) == '\t')
+			{
 				write(1, buf+i, 1);
+				write(1, " ", 1);
+				write(1, buf+i, 1);
+			}
 			i--;
 		}
 		break;
@@ -648,6 +698,8 @@ readstring(char* buf, int nmax) {
 		for(; (isalnum(*(buf+i)) || *(buf+i) == '_') && i >= 0; i--)
 			*(buf+i) = toupper(*(buf+i));
 		i = tmp;
+		moveyx(y, x);
+		simple_print(i, buf);
 		break;
 	case '\t':
 		*(buf+i) = ch;
@@ -660,7 +712,13 @@ readstring(char* buf, int nmax) {
 		i++;
 		break;
 	}
-
+/*
+ *(buf+i) = 0;
+ save_cur();
+ moveyx(y, x);
+ printf("%s"CLR, buf);
+// rest_cur();
+*/
  } while ( ch != 0 );
  return ret; 
 }
@@ -1283,6 +1341,19 @@ message(char* s)
  return 0;
 }
 
+int
+fmessage(char* format, ...)
+{
+ char s[MAX_LINE] = "";
+ va_list ap;
+ 
+ va_start(ap, format);
+ vsnprintf(s, MAX_LINE, format, ap);
+ va_end(ap);
+ print_line_x(1, 1, s);
+ return 0;
+}
+
 
 int
 gmessage(char* s)
@@ -1556,7 +1627,7 @@ move_down_block()
 
 
 int
-move_first()
+move_first_line()
 {
  while( file->cur_line->backw != NULL )
 	file->cur_line = file->cur_line->backw;
@@ -1566,7 +1637,7 @@ move_first()
 
 
 int
-move_last()
+move_last_line()
 {
  while( file->cur_line->forw != NULL )
 	file->cur_line = file->cur_line->forw;
@@ -2329,12 +2400,12 @@ simple_find()
  for ( ; line != NULL; line = line->forw, o = -1)
  for (pos = line->str + o + 1; pos = find_ss (pos, s_buf); pos += len) {
 
-/*
-	if ((isalnum (pos[-1]) && pos != line->str) || isalnum (pos[len])
-	|| (pos[-1] == '_' && pos != line->str) || pos[len] == '_')
-		continue;
-*/
 
+//	if ((isalnum (pos[-1]) && pos != line->str) || isalnum (pos[len])
+//	|| (pos[-1] == '_' && pos != line->str) || pos[len] == '_')
+//		continue;
+		
+		
 	file->cur_line = line;
 
 	redraw_screen();
@@ -2355,7 +2426,7 @@ cmd_simple_find()
 {
  getstring(s_buf, "Find:");
 // if (s_buf[0])
-// move_first();
+// move_first_line();
  simple_find();
  return 0;
 }
@@ -2376,7 +2447,7 @@ find_name()
 
  if( len )
  for ( ; line != NULL; line = line->forw, o = -1)
- for (pos = line->str + o + 1; pos = strstr (pos, s_buf); pos += len) {
+ for (pos = line->str + o + 1; (pos = strstr (pos, s_buf)); pos += len) {
 
 	if ((isalnum (pos[-1]) && pos != line->str) || isalnum (pos[len])
 	|| (pos[-1] == '_' && pos != line->str) || pos[len] == '_')
@@ -2439,7 +2510,7 @@ cmd_find_beginning()
 {
  getstring(s_buf, "Find:");
  if (s_buf[0])
-	move_first();
+	move_first_line();
 
  find_beginning();
  return 0;
@@ -2483,7 +2554,7 @@ search_and_replace(line_t* start_srch, line_t* end_srch, int name)
  if( s_len )
  for( ;line != end_srch->forw; line = line->forw )
 
- for (pos = line->str; pos = strstr( pos, s_buf );) {
+ for (pos = line->str; (pos = strstr( pos, s_buf ));) {
 	o = pos - line->str;
 
 	if (name == 1)
@@ -2537,7 +2608,7 @@ cmd_replace_global()
 }
 
 int
-cmd_replace_global2()
+cmd_rename_global()
 {
  buffer_t *tmp = file; 
  message("GLOBAL replace name");
@@ -2566,7 +2637,7 @@ cmd_replace_marks()
 
 
 int
-cmd_replace_whole2()
+cmd_rename_whole()
 {
  getstring(s_buf, "Search:");
  getstring(r_buf, "Replace:");
@@ -2578,7 +2649,7 @@ cmd_replace_whole2()
 
 
 int
-cmd_replace_marks2()
+cmd_rename_marks()
 {
  getstring(s_buf, "Search:");
  getstring(r_buf, "Replace:");
@@ -2607,7 +2678,7 @@ cmd_repeat_repl_marks()
 
 
 int
-cmd_repeat_repl_whole2()
+cmd_repeat_rename_whole()
 {
  search_and_replace (get_head(), get_tail(), 1);
  redraw_screen();
@@ -2616,7 +2687,7 @@ cmd_repeat_repl_whole2()
 
 
 int
-cmd_repeat_repl_marks2()
+cmd_repeat_rename_marks()
 {
  search_and_replace (file->copy_start_pos, file->copy_end_pos, 1);
  redraw_screen();
@@ -3359,7 +3430,7 @@ cmd_goto_line()
  readstring(buf, MAX_LINE);
  rest_cur();
  n = atoi(buf);
- if( line = goto_line( n ) ) {
+ if( (line = goto_line( n ) )) {
 	file->cur_line = line;
 	redraw_screen();
  }
@@ -3755,4 +3826,10 @@ indent_cur_line()
 int
 cur_len() {
  return strlen(file->cur_line->str);
+}
+
+int
+test() {
+ fmessage("%d", cur_len());
+ return 0;
 }

@@ -9,6 +9,8 @@ typedef struct command {
 	int flag;
 	int status; // ON/OFF
 	int (*noargsfunc) ();
+	char* name;
+	char* help_str;
 
 	struct command *next;
 	struct command *prev;
@@ -28,12 +30,15 @@ typedef struct command_str {
 char** split(char* str);
 int command(char* );
 func_t command_char(char ch);
-int newcom(char ch, int mask, int status, int (*noargsfunc)() );
+int newcom(char ch, int mask, int status, int (*noargsfunc)(), char* name);
 int newcom_str(char* str, int (*func)(int argn, char** argv));
+int assign_help(char* name, char* help_str);
 int freecommands();
 int freecommands_str();
 int make_commands();
-int help(int, char**);
+/*
+int help_comm(int, char**);
 int fuck(int, char**);
+*/
 int set_tab(int argn , char** argv);
 int cmd_open(int argn, char** argv);

@@ -83,16 +83,18 @@ stddeb = stdin;
 	      }
 
 	   if(quotation == 0)
+	   {
 	    if (check_char( *(str+i)) == 1 )
 	    {
-		if (inside==0)
+			if (inside==0)
 		    {
-		    inside = 1;
-		    ++nwords;
+		    	inside = 1;
+		    	++nwords;
 		    }
 	    } else
 		if (inside==1)
 		    inside = 0;
+	   }
 		
 	   i++;
 	}
