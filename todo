@@ -1,0 +1,90 @@
+insert_lines//color?
+binary
+line # bug : "line: 322)"
+line # bug : "line: 32381)"
+new command:???
+remove line->len
+can't edit core
+
+
+make read-only as file/buffer attribute
+
+sortfunc bug double free_lines() in result
+
+/*
+remove file->f
+*/
+
+bug in read_file if open readonly (~/Source/nvi/vi/vi.c) 
+
+color mode
+
+pressing `0 caused seg faul once(new file was opened before)
+
+keymaping
+
+next buff to backsp?
+swap buffers number with shift ?
+
+
+help for string commands
+
+DUMP VARIABLES ON CRASH
+
+simplify newcom (ON/OFF)
+
+some optimisation of output
+
+function and arrow keys
+
+BUGS:
+edit empty line
+fib.c:97:3: error: stray ‘\35’ in program
+-nmax readstring//??
+tab with long strings
+
+-----------
+int
+/*
+shell_command_mode() {
+*/
+do_shell_command(int once) {
+ char buf[MAX_LINE]={0};
+ 
+ 
+-----------
+
+1
+after getstring "if (need_init) {" getstring "}"
+
+2
+
+	 	if (need_init) {}
+		 char buf[MAX_LINE]={0};
+		 clear_all();
+		 moveyx(1, 1);
+		 set_scroll_win(1, trm_rows);
+		 setecho();
+) {}
+
+when trying to delete '}'...
+Error in `med': free(): invalid next size (fast) 0x099ed220
+
+fixed?
+------------------------------------------
+
+readline
+get_head 
+/r/n...
+
+getpos - very very slow
+
+suspend/restore from make
+
+shell
+
+F moves back
+
+/*
+v seg faults
+*/

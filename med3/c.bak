@@ -1,0 +1,162 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include "med.h"
+#define INIT_NUM 1000
+
+line_t* lines;
+line_t* lines_head;
+
+char* 
+open_buf(char* path)
+{
+ int fd;
+ off_t len;
+ char* buf;
+ fd = open(path, O_RDWR);
+ len = lseek(fd, 0, SEEK_END);
+ lseek(fd, 0, SEEK_SET);
+ buf = malloc(len + 1);
+ *(buf + len) = '\0';
+ read(fd, buf, len); 
+ return buf;
+}
+
+/*
+line_t* 
+read_lines(char* path)
+{
+ int i, j;
+ int is_newline;
+ int lines_cnt = 0;
+ int cur_line_len;
+ int fd;
+ off_t len;
+ char* buf;
+ char Buf[500];
+ line_t *lines_read;
+ fd = open(path, O_RDWR);
+ len = lseek(fd, 0, SEEK_END);
+ lseek(fd, 0, SEEK_SET);
+ buf = malloc(len + 1);
+ *(buf + len) = '\0';
+ read(fd, buf, len); 
+
+ if ( *(buf+len-1) != '\n') {
+    *(buf+len) = '\n';
+    len++;
+ }
+
+ for(i = 0; i < len; i++)
+    if( *(buf + i) == '\n') {
+       *(buf + i) = '\0';
+       lines_cnt++;
+       }
+ lines_cnt++;
+
+
+ printf("lines_cnt:%d\n", lines_cnt);
+
+ lines_read = malloc( sizeof( line_t* ) * lines_cnt );
+
+ for (i = 0, j = 0, is_newline = 1; i < len; i++) {
+    if( is_newline == 1) {
+    cur_line_len = strlen( (buf+i) );
+//printf("%d (buf+i): %s %d\n", j, (buf+i), cur_line_len );
+
+    (lines_read + j)->str = malloc( sizeof(char*));
+    //strcpy( (lines_read + j)->str, (buf+i) );
+(lines_read + j)->str = buf + i;
+//printf("%d %s %d\n", j, (lines_read + j)->str, cur_line_len );
+    *( (lines_read + j)->str + cur_line_len) = '\0';
+    is_newline = 0;
+    j++;
+    }
+    if( *(buf+i) == '\0' )
+       is_newline = 1;
+ }
+
+
+ for ( i = 0; i < lines_cnt-1; i++)
+    printf("%d: %s\n", i, (lines_read + i)->str);
+
+ return lines_read;
+}
+*/
+
+
+int
+read_buffer(char* path)
+{
+ int fd, savestdin;
+ int i, j;
+ off_t len;
+ int lines_n;
+ char buf[500];
+
+ fd = open(path, O_RDWR);
+ len = lseek(fd, 0, SEEK_END);
+ lseek(fd, 0, SEEK_SET);
+ savestdin = dup(0);
+ dup2(fd, 0);
+ lines = malloc(sizeof(line_t) * 1000);
+ for(i = 0; gets(buf) != NULL; i++ ) {
+    (lines+i)->str = malloc( strlen(buf) + 1);
+    strcpy( (lines+i)->str, buf);
+ }
+ dup2(savestdin, 0);
+ lines = realloc(lines, sizeof(line_t) * i + 1);
+ (lines+i)->str = NULL;
+ return i;
+}
+
+int
+scroll_up()
+{
+ printf("\033[1;H");
+ printf("\033M");
+ printf("\033[13;H");
+ return 0;
+}
+
+int
+scroll_down()
+{
+ printf("\033[25;H");
+ printf("\033D");
+ printf("\033[13;H");
+ return 0;
+}
+
+int
+move_left(int n)
+{
+ printf("\033[%dD", n);
+ return 0;
+}
+
+int
+move_right(int n)
+{
+ printf("\033[%dC", n);
+ return 0;
+}
+
+int
+output_line(line_t* l)
+{
+ printf("%s\n", l->str);
+ return 0;
+} 
+
+
+
+int
+print_lines(int lines_n)
+{
+ int i;
+ for(i = 0; i < lines_n; i++)
+    printf("%s\n", (lines+i)->str);
+}

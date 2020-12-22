@@ -1,0 +1,155 @@
+STDIO(3)                   Linux Programmer's Manual                  STDIO(3)
+
+
+
+NNAAMMEE
+       stdio - standard input/output library functions
+
+SSYYNNOOPPSSIISS
+       ##iinncclluuddee <<ssttddiioo..hh>>
+
+       FFIILLEE **_s_t_d_i_n;;
+       FFIILLEE **_s_t_d_o_u_t;;
+       FFIILLEE **_s_t_d_e_r_r;;
+
+DDEESSCCRRIIPPTTIIOONN
+       The  standard  I/O  library  provides  a  simple and efficient buffered
+       stream I/O interface.  Input and output is  mapped  into  logical  data
+       streams  and the physical I/O characteristics are concealed.  The func‐
+       tions and macros are listed below; more information is  available  from
+       the individual man pages.
+
+       A  stream  is associated with an external file (which may be a physical
+       device) by _o_p_e_n_i_n_g a file, which may involve creating a new file.  Cre‐
+       ating  an existing file causes its former contents to be discarded.  If
+       a file can support positioning  requests  (such  as  a  disk  file,  as
+       opposed  to  a terminal) then a _f_i_l_e _p_o_s_i_t_i_o_n _i_n_d_i_c_a_t_o_r associated with
+       the stream is positioned at the start of the file (byte  zero),  unless
+       the  file  is  opened  with append mode.  If append mode is used, it is
+       unspecified whether the position indicator will be placed at the  start
+       or the end of the file.  The position indicator is maintained by subse‐
+       quent reads, writes and positioning requests.  All input occurs  as  if
+       the  characters were read by successive calls to the ffggeettcc(3) function;
+       all output takes place as if all characters were written by  successive
+       calls to the ffppuuttcc(3) function.
+
+       A  file  is  disassociated  from  a stream by _c_l_o_s_i_n_g the file.  Output
+       streams are flushed (any unwritten buffer contents are  transferred  to
+       the host environment) before the stream is disassociated from the file.
+       The value of a pointer to a _F_I_L_E object is indeterminate after  a  file
+       is closed (garbage).
+
+       A  file  may  be  subsequently reopened, by the same or another program
+       execution, and its contents reclaimed or modified (if it can be reposi‐
+       tioned  at  the  start).   If the main function returns to its original
+       caller, or the eexxiitt(3) function is called, all open  files  are  closed
+       (hence  all  output  streams  are  flushed) before program termination.
+       Other methods of program termination, such as aabboorrtt(3)  do  not  bother
+       about closing files properly.
+
+       At  program  startup, three text streams are predefined and need not be
+       opened explicitly: _s_t_a_n_d_a_r_d _i_n_p_u_t  (for  reading  conventional  input),
+       _s_t_a_n_d_a_r_d  _o_u_t_p_u_t  (for  writing conventional input), and _s_t_a_n_d_a_r_d _e_r_r_o_r
+       (for  writing  diagnostic  output).   These  streams  are   abbreviated
+       _s_t_d_i_n,_s_t_d_o_u_t and _s_t_d_e_r_r.  When opened, the standard error stream is not
+       fully buffered;  the  standard  input  and  output  streams  are  fully
+       buffered  if  and  only  if  the streams do not refer to an interactive
+       device.
+
+       Output streams that refer to terminal devices are always line  buffered
+       by  default;  pending  output  to such streams is written automatically
+       whenever an input stream that refers to a terminal device is read.   In
+       cases  where  a large amount of computation is done after printing part
+       of a line on an output terminal, it is necessary to fffflluusshh(3) the stan‐
+       dard  output  before  going  off  and computing so that the output will
+       appear.
+
+       The _s_t_d_i_o library is a part of the library lliibbcc and routines are  auto‐
+       matically  loaded as needed by the compilers cccc(1) and ppcc(1).  The SYN‐
+       OPSIS sections of the following manual  pages  indicate  which  include
+       files  are  to  be used, what the compiler declaration for the function
+       looks like and which external variables are of interest.
+
+       The following are defined as macros; these  names  may  not  be  reused
+       without  first  removing their current definitions with ##uunnddeeff: BBUUFFSSIIZZ,
+       EEOOFF, FFIILLEENNAAMMEE__MMAAXX, FFOOPPEENN__MMAAXX,  LL__ccuusseerriidd,  LL__cctteerrmmiidd,  LL__ttmmppnnaamm,  NNUULLLL,
+       SSEEEEKK__EENNDD,  SSEEEEKK__SSEETT, SSEEEEKK__CCUURR, TTMMPP__MMAAXX, cclleeaarreerrrr, ffeeooff, ffeerrrroorr, ffiilleennoo,
+       ggeettcc, ggeettcchhaarr, ppuuttcc, ppuuttcchhaarr, ssttddeerrrr, ssttddiinn, ssttddoouutt.  Function versions
+       of  the  macro functions ffeeooff, ffeerrrroorr, cclleeaarreerrrr, ffiilleennoo, ggeettcc, ggeettcchhaarr,
+       ppuuttcc, and ppuuttcchhaarr exist and will be used if the macros definitions  are
+       explicitly removed.
+
+   LLiisstt ooff ffuunnccttiioonnss
+       FFuunnccttiioonn      DDeessccrriippttiioonn
+       ───────────────────────────────────────────────────────────────────
+       cclleeaarreerrrr      check and reset stream status
+       ffcclloossee        close a stream
+       ffddooppeenn        stream open functions
+       ffeeooff          check and reset stream status
+       ffeerrrroorr        check and reset stream status
+       fffflluusshh        flush a stream
+       ffggeettcc         get next character or word from input stream
+       ffggeettppooss       reposition a stream
+       ffggeettss         get a line from a stream
+       ffiilleennoo        return the integer descriptor of the argument stream
+       ffooppeenn         stream open functions
+       ffpprriinnttff       formatted output conversion
+       ffppuurrggee        flush a stream
+       ffppuuttcc         output a character or word to a stream
+       ffppuuttss         output a line to a stream
+       ffrreeaadd         binary stream input/output
+       ffrreeooppeenn       stream open functions
+       ffssccaannff        input format conversion
+       ffsseeeekk         reposition a stream
+       ffsseettppooss       reposition a stream
+       fftteellll         reposition a stream
+       ffwwrriittee        binary stream input/output
+       ggeettcc          get next character or word from input stream
+       ggeettcchhaarr       get next character or word from input stream
+       ggeettss          get a line from a stream
+       ggeettww          get next character or word from input stream
+       mmkktteemmpp        make temporary filename (unique)
+       ppeerrrroorr        system error messages
+       pprriinnttff        formatted output conversion
+       ppuuttcc          output a character or word to a stream
+       ppuuttcchhaarr       output a character or word to a stream
+       ppuuttss          output a line to a stream
+       ppuuttww          output a character or word to a stream
+       rreemmoovvee        remove directory entry
+       rreewwiinndd        reposition a stream
+       ssccaannff         input format conversion
+       sseettbbuuff        stream buffering operations
+       sseettbbuuffffeerr     stream buffering operations
+       sseettlliinneebbuuff    stream buffering operations
+       sseettvvbbuuff       stream buffering operations
+       sspprriinnttff       formatted output conversion
+       ssssccaannff        input format conversion
+       ssttrreerrrroorr      system error messages
+       ssyyss__eerrrrlliisstt   system error messages
+       ssyyss__nneerrrr      system error messages
+       tteemmppnnaamm       temporary file routines
+       ttmmppffiillee       temporary file routines
+
+       ttmmppnnaamm        temporary file routines
+       uunnggeettcc        un-get character from input stream
+       vvffpprriinnttff      formatted output conversion
+       vvffssccaannff       input format conversion
+       vvpprriinnttff       formatted output conversion
+       vvssccaannff        input format conversion
+       vvsspprriinnttff      formatted output conversion
+       vvssssccaannff       input format conversion
+
+CCOONNFFOORRMMIINNGG TTOO
+       The _s_t_d_i_o library conforms to C89.
+
+SSEEEE AALLSSOO
+       cclloossee(2), ooppeenn(2), rreeaadd(2), wwrriittee(2), ssttddoouutt(3), uunnlloocckkeedd__ssttddiioo(3)
+
+CCOOLLOOPPHHOONN
+       This  page  is  part of release 3.54 of the Linux _m_a_n_-_p_a_g_e_s project.  A
+       description of the project, and information about reporting  bugs,  can
+       be found at http://www.kernel.org/doc/man-pages/.
+
+
+
+                                  2001-12-26                          STDIO(3)

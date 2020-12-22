@@ -1,8 +1,13 @@
+#include "med.h"
+
 #define ALT_FLAG 01
 #define NUM_ROW_FLAG 02
 #define SRCH_FLAG 04
 #define SRCH_FLAG2 010
 #define SRCH_FLAG3 020
+
+#define ON 1
+#define OFF 0
 
 typedef struct command {
 	char ch;
@@ -14,7 +19,7 @@ typedef struct command {
 
 	struct command *next;
 	struct command *prev;
-} Cmd;
+} cmd_t;
 
 
 typedef struct command_str {
@@ -23,19 +28,22 @@ typedef struct command_str {
 
 	struct command_str *next;
 	struct command_str *prev;
-} Cmd_str;
+} cmd_str_t;
 
 //typedef int (*func_t)();
 
 char** split(char* str);
 int command(char* );
-func_t command_char(char ch);
+cmd_t* command_char(char ch);
 int newcom(char ch, int mask, int status, int (*noargsfunc)(), char* name);
 int newcom_str(char* str, int (*func)(int argn, char** argv));
 int assign_help(char* name, char* help_str);
 int freecommands();
 int freecommands_str();
 int make_commands();
+int make_help();
+int help_comm(int argn, char** argv);
+int help_comm2(int argn, char** argv);
 /*
 int help_comm(int, char**);
 int fuck(int, char**);

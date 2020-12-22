@@ -1,3 +1,4 @@
+#define ctrl(c) ((c) - 96)
 #define C_a '\001'
 #define C_b '\002'
 #define C_c '\003'
@@ -28,9 +29,12 @@
 
 
 #define K_CMD 'q'
-#define K_TEST '\026'
+//#define K_TEST '\026'
+#define K_TEST 'T'
 
-//#define K_F_BUF_CLOSE '\021'
+#define K_SCRIPT C_k
+#define K_MAKE_RUN 'A'
+#define K_FUNC_TEMPL 'B'
 #define K_F_BUF_CLOSE C_q
 #define K_F_BUF_REOPEN C_a 
 #define K_F_BUF_NEXT '='
@@ -46,7 +50,8 @@
 #define K_F_BUF_GO_9 '9'
 #define K_F_BUF_GO_0 '0'
 
-//#define K_CHNG_COL C_g
+#define K_CHNG_COL 'y'
+#define K_CHNG_COL_MODE 'Y'
 #define K_REDRAW C_r
 
 #define K_SW_ALT '!' 
@@ -59,20 +64,22 @@
 #define K_GL_REPL C_t
 #define K_GL_REN C_y
 
-#define K_CUR_UP C_p
-#define K_CUR_DN C_n
+#define K_INSP_KEY C_p
+/*
+#define K_CUR_DN 'V'
+*/
 #define K_MV_UP 'k'
 #define K_MV_UP_SCR 'K'
-#define K_MV_UP_START C_k
+#define K_MV_UP_START '>'
 #define K_MV_DN 'j'
 #define K_MV_DN_SCR 'J'
-#define K_MV_DN_END C_h
+#define K_MV_DN_END '<'
 #define K_MV_R 'f'
 #define K_MV_R_END 'g'
 #define K_MV_R_N 'I'
 #define K_MV_BOW 'i'
-//#define K_MV_BOW C_v
 #define K_MV_WORDBACK 'u'
+//#define K_MV_BOW C_v
 #define K_MV_L 'd'
 #define K_MV_L_BEG 's'
 #define K_MV_L_N 'U'
@@ -94,7 +101,7 @@
 #define K_INDENT C_o
 #define K_SPACE ' '
 #define K_INS_CHAR 'p'
-#define K_CHANGE_CHAR '['
+#define K_CHANGE_CHAR 'w'
 #define K_FIND '/'
 #define K_FIND_NAME '?'
 #define K_REPLACE 'S'
@@ -112,9 +119,14 @@
 #define K_COPY 'a'
 #define K_PASTE 'z'
 #define K_CONCAT 'C'
-#define K_DEL_BLOCK 'w'
+#define K_DEL_BLOCK ']'
 #define K_GOTO_LINE  'P'
 #define K_SHOW_BUFF C_b
 #define K_MV_UP_BLOCK C_d
 #define K_MV_DN_BLOCK C_f
 #define K_UNDO C_l
+#define K_READ_SEQ C_v  
+#define K_SEND_SEQ 'v' 
+
+#define K_ENFRAME 'N' 
+#define K_READ_ENFR_STR C_n

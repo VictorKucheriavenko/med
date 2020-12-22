@@ -1,0 +1,23 @@
+added clear_debug_screen
+
+command_mode// "cm"
+shell_command_mode// "shell";
+//"exit", "q" to exit
+
+command_mode, shell_command_mode
+
+fixed enframe_ind bug
+
+askchar
+
+free_lines
+
+undo/redo
+
+set_raw_mode
+
+write_buf
+
+show_bar
+
+getstring

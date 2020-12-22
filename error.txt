@@ -1,0 +1,1925 @@
+*********************************
+
+o:10 prev_o:1 j:9 p-str:0
+
+o:9 prev_o:1 j:8 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:51 prev_o:1 j:46 p-str:1
+
+o:15 prev_o:1 j:10 p-str:1
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:22 prev_o:1 j:21 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:64 prev_o:1 j:63 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:45 prev_o:1 j:44 p-str:0
+
+o:40 prev_o:1 j:39 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:10 prev_o:1 j:9 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:10 prev_o:1 j:9 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:81 prev_o:1 j:80 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:45 prev_o:1 j:44 p-str:0
+
+o:40 prev_o:1 j:39 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:10 prev_o:1 j:9 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:14 prev_o:1 j:13 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:10 prev_o:1 j:9 p-str:0
+
+o:9 prev_o:1 j:8 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:51 prev_o:1 j:46 p-str:1
+
+o:15 prev_o:1 j:10 p-str:1
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:22 prev_o:1 j:21 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:14 prev_o:1 j:13 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:64 prev_o:1 j:63 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:45 prev_o:1 j:44 p-str:0
+
+o:40 prev_o:1 j:39 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:10 prev_o:1 j:9 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:10 prev_o:1 j:9 p-str:0
+
+o:9 prev_o:1 j:8 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:51 prev_o:1 j:46 p-str:1
+
+o:15 prev_o:1 j:10 p-str:1
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:22 prev_o:1 j:21 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:64 prev_o:1 j:63 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:45 prev_o:1 j:44 p-str:0
+
+o:40 prev_o:1 j:39 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:10 prev_o:1 j:9 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:10 prev_o:1 j:9 p-str:0
+
+o:9 prev_o:1 j:8 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:51 prev_o:1 j:46 p-str:1
+
+o:15 prev_o:1 j:10 p-str:1
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:22 prev_o:1 j:21 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:14 prev_o:1 j:13 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:20 prev_o:1 j:19 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:20 prev_o:1 j:19 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:20 prev_o:1 j:19 p-str:0
+
+o:20 prev_o:1 j:19 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:38 prev_o:1 j:37 p-str:0
+
+o:22 prev_o:1 j:21 p-str:0
+
+o:23 prev_o:1 j:22 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:81 prev_o:1 j:80 p-str:0
+
+o:35 prev_o:5 j:26 p-str:2
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:10 prev_o:1 j:9 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:50 prev_o:1 j:49 p-str:0
+
+o:51 prev_o:1 j:50 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:28 prev_o:1 j:27 p-str:0
+
+o:10 prev_o:1 j:9 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:21 prev_o:1 j:20 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:50 prev_o:1 j:49 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:51 prev_o:1 j:50 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:10 prev_o:1 j:9 p-str:0
+
+o:28 prev_o:1 j:27 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:50 prev_o:1 j:49 p-str:0
+
+o:51 prev_o:1 j:50 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:28 prev_o:1 j:27 p-str:0
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:21 prev_o:1 j:20 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:10 prev_o:1 j:9 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:50 prev_o:1 j:49 p-str:0
+
+o:51 prev_o:1 j:50 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:28 prev_o:1 j:27 p-str:0
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:21 prev_o:1 j:20 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:10 prev_o:1 j:9 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:20 prev_o:1 j:19 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:20 prev_o:1 j:19 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:20 prev_o:1 j:19 p-str:0
+
+o:20 prev_o:1 j:19 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:38 prev_o:1 j:37 p-str:0
+
+o:22 prev_o:1 j:21 p-str:0
+
+o:23 prev_o:1 j:22 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:10 prev_o:1 j:5 p-str:1
+
+o:24 prev_o:5 j:15 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:40 prev_o:1 j:35 p-str:1
+
+o:41 prev_o:5 j:32 p-str:4
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:27 prev_o:5 j:18 p-str:4
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:18 prev_o:1 j:17 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:33 prev_o:1 j:28 p-str:1
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:41 prev_o:5 j:32 p-str:2
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:27 prev_o:5 j:18 p-str:2
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:35 prev_o:5 j:26 p-str:2
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:43 prev_o:1 j:38 p-str:1
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:42 prev_o:1 j:41 p-str:0
+
+o:27 prev_o:5 j:18 p-str:4
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:23 prev_o:1 j:22 p-str:0
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:41 prev_o:5 j:32 p-str:4
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:40 prev_o:1 j:35 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:24 prev_o:5 j:15 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:6 prev_o:1 j:1 p-str:1
+
+o:10 prev_o:1 j:5 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:57 prev_o:1 j:56 p-str:0
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:35 prev_o:5 j:26 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:23 prev_o:1 j:22 p-str:0
+
+o:43 prev_o:1 j:38 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:42 prev_o:1 j:41 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:23 prev_o:1 j:22 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:22 prev_o:1 j:21 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:40 prev_o:1 j:35 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:41 prev_o:5 j:32 p-str:4
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:23 prev_o:1 j:22 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:27 prev_o:5 j:18 p-str:4
+
+o:42 prev_o:1 j:41 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:43 prev_o:1 j:38 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:35 prev_o:5 j:26 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:18 prev_o:1 j:17 p-str:0
+
+o:10 prev_o:1 j:5 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:24 prev_o:5 j:15 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:33 prev_o:1 j:28 p-str:1
+
+o:40 prev_o:1 j:35 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:41 prev_o:5 j:32 p-str:4
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:41 prev_o:5 j:32 p-str:2
+
+o:27 prev_o:5 j:18 p-str:4
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:27 prev_o:5 j:18 p-str:2
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:18 prev_o:1 j:17 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:25 prev_o:1 j:24 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:21 prev_o:1 j:20 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:33 prev_o:1 j:28 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:41 prev_o:5 j:32 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:27 prev_o:5 j:18 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:20 prev_o:1 j:19 p-str:0
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:25 prev_o:1 j:24 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:21 prev_o:1 j:20 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:33 prev_o:1 j:28 p-str:1
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:21 prev_o:1 j:20 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:25 prev_o:1 j:24 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:18 prev_o:1 j:17 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:27 prev_o:5 j:18 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:27 prev_o:5 j:18 p-str:4
+
+o:41 prev_o:5 j:32 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:41 prev_o:5 j:32 p-str:4
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:40 prev_o:1 j:35 p-str:1
+
+o:33 prev_o:1 j:28 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:24 prev_o:5 j:15 p-str:2
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:10 prev_o:1 j:5 p-str:1
+
+o:18 prev_o:1 j:17 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:35 prev_o:5 j:26 p-str:2
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:43 prev_o:1 j:38 p-str:1
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:42 prev_o:1 j:41 p-str:0
+
+o:27 prev_o:5 j:18 p-str:4
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:23 prev_o:1 j:22 p-str:0
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:41 prev_o:5 j:32 p-str:4
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:40 prev_o:1 j:35 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:24 prev_o:5 j:15 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:6 prev_o:1 j:1 p-str:1
+
+o:10 prev_o:1 j:5 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:57 prev_o:1 j:56 p-str:0
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:35 prev_o:5 j:26 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:23 prev_o:1 j:22 p-str:0
+
+o:43 prev_o:1 j:38 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:42 prev_o:1 j:41 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:23 prev_o:1 j:22 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:22 prev_o:1 j:21 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:6 prev_o:1 j:1 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:57 prev_o:1 j:56 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:23 prev_o:1 j:22 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:18 prev_o:1 j:17 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:22 prev_o:1 j:21 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:18 prev_o:1 j:17 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:18 prev_o:1 j:17 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:10 prev_o:1 j:5 p-str:1
+
+o:24 prev_o:5 j:15 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:40 prev_o:1 j:35 p-str:1
+
+o:41 prev_o:5 j:32 p-str:4
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:27 prev_o:5 j:18 p-str:4
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:18 prev_o:1 j:17 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:33 prev_o:1 j:28 p-str:1
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:41 prev_o:5 j:32 p-str:2
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:27 prev_o:5 j:18 p-str:2
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:24 prev_o:5 j:15 p-str:2
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:40 prev_o:1 j:35 p-str:1
+
+o:41 prev_o:5 j:32 p-str:4
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:27 prev_o:5 j:18 p-str:4
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:18 prev_o:1 j:17 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:33 prev_o:1 j:28 p-str:1
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:41 prev_o:5 j:32 p-str:2
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:27 prev_o:5 j:18 p-str:2
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:25 prev_o:1 j:24 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:41 prev_o:5 j:32 p-str:4
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:27 prev_o:5 j:18 p-str:4
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:18 prev_o:1 j:17 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:33 prev_o:1 j:28 p-str:1
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:41 prev_o:5 j:32 p-str:2
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:27 prev_o:5 j:18 p-str:2
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:25 prev_o:1 j:24 p-str:0
+
+o:21 prev_o:1 j:20 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:27 prev_o:5 j:18 p-str:4
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:18 prev_o:1 j:17 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:33 prev_o:1 j:28 p-str:1
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:41 prev_o:5 j:32 p-str:2
+
+o:36 prev_o:5 j:27 p-str:2
+
+o:27 prev_o:5 j:18 p-str:2
+
+o:7 prev_o:1 j:2 p-str:1
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:25 prev_o:1 j:24 p-str:0
+
+o:21 prev_o:1 j:20 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:50 prev_o:1 j:49 p-str:0
+
+o:51 prev_o:1 j:50 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:28 prev_o:1 j:27 p-str:0
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:21 prev_o:1 j:20 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:10 prev_o:1 j:9 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:51 prev_o:1 j:50 p-str:0
+
+o:50 prev_o:1 j:49 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:39 prev_o:1 j:38 p-str:0
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:21 prev_o:1 j:20 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:15 prev_o:1 j:14 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:51 prev_o:1 j:50 p-str:0
+
+o:50 prev_o:1 j:49 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:39 prev_o:1 j:38 p-str:0
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:21 prev_o:1 j:20 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:15 prev_o:1 j:14 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:51 prev_o:1 j:50 p-str:0
+
+o:50 prev_o:1 j:49 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:39 prev_o:1 j:38 p-str:0
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:21 prev_o:1 j:20 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:15 prev_o:1 j:14 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:51 prev_o:1 j:50 p-str:0
+
+o:69 prev_o:1 j:68 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:39 prev_o:1 j:38 p-str:0
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:26 prev_o:1 j:25 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:51 prev_o:1 j:50 p-str:0
+
+o:69 prev_o:1 j:68 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:39 prev_o:1 j:38 p-str:0
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:26 prev_o:1 j:25 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:17 prev_o:1 j:16 p-str:0
+
+o:51 prev_o:1 j:50 p-str:0
+
+o:69 prev_o:1 j:68 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:39 prev_o:1 j:38 p-str:0
+
+o:13 prev_o:1 j:8 p-str:1
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:26 prev_o:1 j:25 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:30 prev_o:1 j:29 p-str:0
+
+o:36 prev_o:1 j:31 p-str:1
+
+o:14 prev_o:1 j:9 p-str:1
+
+o:6 prev_o:1 j:5 p-str:0
+
+o:37 prev_o:1 j:32 p-str:1
+
+o:14 prev_o:1 j:9 p-str:1
+
+o:8 prev_o:1 j:7 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:22 prev_o:1 j:21 p-str:0
+
+o:30 prev_o:1 j:29 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:75 prev_o:1 j:74 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:22 prev_o:1 j:21 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:14 prev_o:1 j:13 p-str:0
+
+o:21 prev_o:1 j:20 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:30 prev_o:1 j:29 p-str:0
+
+o:36 prev_o:1 j:31 p-str:1
+
+o:14 prev_o:1 j:9 p-str:1
+
+o:6 prev_o:1 j:5 p-str:0
+
+o:37 prev_o:1 j:32 p-str:1
+
+o:14 prev_o:1 j:9 p-str:1
+
+o:8 prev_o:1 j:7 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:22 prev_o:1 j:21 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:30 prev_o:1 j:29 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:75 prev_o:1 j:74 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:22 prev_o:1 j:21 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:14 prev_o:1 j:13 p-str:0
+
+o:21 prev_o:1 j:20 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:53 prev_o:1 j:52 p-str:0
+
+o:58 prev_o:1 j:53 p-str:1
+
+o:14 prev_o:1 j:9 p-str:1
+
+o:6 prev_o:1 j:5 p-str:0
+
+o:59 prev_o:1 j:54 p-str:1
+
+o:14 prev_o:1 j:9 p-str:1
+
+o:8 prev_o:1 j:7 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:22 prev_o:1 j:21 p-str:0
+
+o:35 prev_o:1 j:34 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:53 prev_o:1 j:52 p-str:0
+
+o:58 prev_o:1 j:53 p-str:1
+
+o:14 prev_o:1 j:9 p-str:1
+
+o:6 prev_o:1 j:5 p-str:0
+
+o:59 prev_o:1 j:54 p-str:1
+
+o:14 prev_o:1 j:9 p-str:1
+
+o:8 prev_o:1 j:7 p-str:0
+
+o:19 prev_o:1 j:18 p-str:0
+
+o:22 prev_o:1 j:21 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:35 prev_o:1 j:34 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:12 prev_o:1 j:11 p-str:0
+
+o:2 prev_o:1 j:1 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:11 prev_o:1 j:10 p-str:0
+
+o:16 prev_o:1 j:15 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:10 prev_o:1 j:9 p-str:0
+
+o:9 prev_o:1 j:8 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:13 prev_o:1 j:12 p-str:0
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:51 prev_o:1 j:46 p-str:1
+
+o:15 prev_o:1 j:10 p-str:1
+
+o:4 prev_o:1 j:3 p-str:0
+
+o:3 prev_o:1 j:2 p-str:0
+
+o:1 prev_o:1 j:0 p-str:0
+
+o:22 prev_o:1 j:21 p-str:0

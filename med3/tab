@@ -1,0 +1,3 @@
+       case K_UP:
+	  move_up(1);
+	  break;

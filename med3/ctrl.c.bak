@@ -1,0 +1,26 @@
+#include <stdio.h>
+#include <termios.h>
+
+int setnocanon();
+int setnoecho();
+int setcanon();
+int setecho();
+
+int
+main() {
+ int i;
+ char c;
+struct termios restore, term;
+tcgetattr( 0, &restore );
+tcgetattr( 0, &term );
+term.c_lflag &= ~(ISIG | ICANON | ECHO);
+term.c_iflag &= ~(IXON);
+tcsetattr( 0, TCSANOW, &term);
+
+ while( c != 27 )
+ {
+  c = getchar();
+  printf("%c %x\n", c, c);
+ }
+tcsetattr( 0, TCSANOW, &restore);
+}

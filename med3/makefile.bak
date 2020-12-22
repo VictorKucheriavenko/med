@@ -1,0 +1,8 @@
+med: med.c
+	gcc -Wimplicit-function-declaration -o med -Wfatal-errors med.c -lncurses
+e:
+	./med file
+copy:
+	sudo cp ./med /usr/bin/
+bak:
+	cp -f ./med.c ./med.c.bak

@@ -1,0 +1,8 @@
+program example
+	defvar a
+	assign a 10
+loop:
+	decr a
+	print a
+	jumpnz loop a
+	print 13

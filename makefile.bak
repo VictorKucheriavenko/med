@@ -1,0 +1,36 @@
+med: init.c med.c move_x.c edit.c command.c split.c undo.c script.c FORCE
+	./autohead med.c > function.h
+	./autohead init.c > init.h
+	./autohead move_x.c > move_x.h
+	./autohead edit.c > edit.h
+
+	gcc -g -Wall -Werror -Wno-unused-variable -Wno-return-type -Wno-unused-but-set-variable -Wno-char-subscripts -fmax-errors=1 -o med med.c init.c move_x.c edit.c command.c split.c undo.c script.c -lncurses
+	
+all: init.c med.c move_x.c edit.c command.c split.c undo.c script.c FORCE
+	./autohead med.c > function.h
+	./autohead init.c > init.h
+	./autohead move_x.c > move_x.h
+	./autohead edit.c > edit.h
+
+	gcc -g -Wall -Werror -Wno-unused-variable -Wno-return-type -Wno-unused-but-set-variable -Wno-char-subscripts -fmax-errors=1 -o med med.c init.c move_x.c edit.c command.c split.c undo.c script.c
+	gcc -D READ -Wall -Wno-unused-variable -Wno-return-type -Wno-unused-but-set-variable -Wno-char-subscripts -fmax-errors=1 -o red med.c init.c move_x.c edit.c command.c split.c undo.c script.c 
+	
+run: init.c med.c move_x.c edit.c command.c split.c undo.c script.c FORCE
+	./autohead med.c > function.h
+	./autohead init.c > init.h
+	./autohead move_x.c > move_x.h
+	./autohead edit.c > edit.h
+
+	gcc -g -Wall -Werror -Wno-unused-variable -Wno-return-type -Wno-unused-but-set-variable -Wno-char-subscripts -fmax-errors=1 -o med med.c init.c move_x.c edit.c command.c split.c undo.c script.c
+	./med file
+red: init.c med.c move_x.c edit.c command.c split.c undo.c script.c FORCE
+	./autohead med.c > function.h
+	./autohead init.c > init.h
+	./autohead move_x.c > move_x.h
+	./autohead edit.c > edit.h
+
+	gcc -D READ -Wall -Wno-unused-variable -Wno-return-type -Wno-unused-but-set-variable -Wno-char-subscripts -fmax-errors=1 -o red med.c init.c move_x.c edit.c command.c split.c undo.c script.c 
+install:
+	sudo cp -f ./med /usr/bin/
+	sudo cp -f ./red /usr/bin/
+FORCE:

@@ -1,13 +1,15 @@
-#define LOG 0
-int make_commands();
-int make_help();
-int help_comm(int argn, char** argv);
+/*
+#define NO_SHOW_BAR
+*/
+#define NO_GETPOS
+#define DEB_SCR_SIZE 4
 
-#define _GNU_SOURCE
+#include <time.h>
 #include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <ctype.h>
 #include <signal.h>
 #include <assert.h>
@@ -16,15 +18,49 @@ int help_comm(int argn, char** argv);
 #include <unistd.h>
 #include <termios.h>
 #include <sys/stat.h>
-#include "colors.h"
-//#include "find.h"
-#include "med.h"
-#include "command.h"
-#include "keys.h"
 #include <errno.h>
 #include <wchar.h>
-#include "undo.h"
 
+#include "init.h"
+#include "med.h"
+#include "move_x.h"
+#include "colors.h"
+//#include "find.h"
+#include "command.h"
+#include "keys.h"
+#include "undo.h"
+#include "script.h"
+#include "show_bar.h"
+#include "debug.h"
+
+#define ESC 27
+
+#define START 0
+#define STOP 1
+
+extern uint32_t cmd_mask;
+
+#if 0
+#define \
+askchar() \
+ int c;\
+ c = getchar();\
+ if (c == ESC)\
+ 	c = BCSP;\
+ if (c == BCSP)\
+ 	c = ESC;\
+ 	
+#endif
+char
+askchar() {
+ int c = getchar();
+/*
+ if (c == ESC) c = BCSP;
+ else
+ if (c == BCSP) c = ESC;
+*/
+ return c;
+}
 
 #define moveyx(y, x) ( printf("\033[%d;%dH", (y), (x)) )
 #define movex(x) ( printf("\033[;%dH", (x)) )
@@ -34,7 +70,14 @@ int help_comm(int argn, char** argv);
 #define CLL "\033[2K"
 #define clear_all() ( printf("\033[2J") );
 #define clear_down() ( printf("\033[0J") );
+#define clear_up() ( printf("\033[1J") );
 
+#define tc_savecur() (printf("\0337"))
+#define tc_restcur() (printf("\0338"))
+
+#define \
+color(col)\
+(printf("\x1B[%dm", col));
 
 #define scroll_down() \
 		( printf("\033[%d;H\033M\033[%d;%dH", \
@@ -61,20 +104,24 @@ int help_comm(int argn, char** argv);
 
 /**** global variables *****/
 
+int set_show_buffers = 1;
+int gl_deb;
 int fpr;
-Cmd *cmd_head;
-Cmd_str* cmd_str_head;
-int cmd_mask;
 int global;
 int need_goto;
 line_t *copy_buffer_head = NULL;
 line_t *copy_buffer_tail = NULL;
 
+char com_key;
+ 
 int _key_mode = 0;
 int _switch_key_mode = 0;
-int _cols, _rows;
+int trm_cols, trm_rows;
 int _wintop, _winbot, _wincur;
-int _width;
+int dwin_top;
+int dwin_bot;
+int dwin_size = DEB_SCR_SIZE;
+int trm_width;
 int _h_scroll = 15;
 int vert_jmp = 12;
 int autoindent = 1;
@@ -87,12 +134,20 @@ int options;
 
 buffer_t* last_file;
 
+int msg_prior_level;
 buffer_t* file;
-int _tabs;
+int tab_len;
 char msg[MAX_LINE];
 char search_buf[MAX_LINE];
 char s_buf[MAX_LINE];
 char r_buf[MAX_LINE];
+char invoke_buf[MAX_LINE];
+char compile_and_run_buf[MAX_LINE];// compile and run
+char enframe_top[MAX_LINE] = "/*";
+char enframe_bot[MAX_LINE] = "*/";
+char seq[MAX_SEQ];
+int seq_len;
+char seq1[MAX_LINE];
 int key_pressed[256];
 int key_stat[256];
 //int key_pressed[256]={0};
@@ -102,11 +157,12 @@ FILE *erlog;
 int
 main( int argn, char *argv[])
 {
+
  if (argn == 1)
  {
 	printf("med [-rcmh] [file...]\n"); 
 	printf("med -h for help\n"); 
-	printf("med -m for commands help\n"); 
+	printf("med -m for commands' help\n"); 
 	return 1;
  }
 
@@ -116,14 +172,21 @@ main( int argn, char *argv[])
 	erlog = fopen("/dev/null", "w");
  fprintf(erlog, "*********************************\n");
  fflush(erlog);
-
+ 
+// init();
+ 
  int i;
- char c;
+ 
  int (*pfunc)() = NULL;
+ cmd_t* cmd = NULL;
 
- setvbuf(stdout, NULL, _IONBF, 0);
- setvbuf(stdin,  NULL, _IONBF, 0);
+ char *stdbuf = malloc(2048);
+ 
+// setvbuf(stdout, NULL, _IONBF, 0);
+ setvbuf(stdout, stdbuf, _IONBF, 2048);
+// setvbuf(stdin,  stdbuf, _IONBF, 256);
 
+ 
  make_commands();
  make_help();
  
@@ -144,6 +207,9 @@ main( int argn, char *argv[])
 		case 'm':
 			help_comm(0, NULL);
 			return 1;
+		case 'n':
+			help_comm2(0, NULL);
+			return 1;
 		case 'h':
 			printf("med [-rcmh] [file...]\n\n"); 
 			printf("-r\tOpen file in Read-Only mode.\n");
@@ -156,10 +222,7 @@ main( int argn, char *argv[])
 		}
  }
 
-//cmd_mask = 1;
-cmd_mask = 0;
-
- _tabs = 4;
+ tab_len = 4;
 
  int key_valid = 1;
  for(i = 0; i < 256; i++) {
@@ -170,69 +233,256 @@ cmd_mask = 0;
 
  file = NULL;
 
- char com_key;
- char ch_col_ch;
  FILE* f;
  char buf[MAX_LINE];
- struct termios term, restore;
+ struct winsize ws;
 
  copy_buffer_head = NULL;
  copy_buffer_tail = NULL;
 
- signal (SIGABRT, &sig_handler);
- signal (SIGTERM, &sig_handler);
- signal (SIGSEGV, &sigsegv_handler);
- atexit( &sig_handler );
-
+/*
+ color(GRN);
+*/
+ 
  if (options == 1)
 	i = 2;
  else
 	i = 1;
  for( ; i < argn; i++)
- 	open_file(argv[i]);
+ {
+ 	if (open_file(argv[i]) == -1)
+ 	;
+// 		perror(argv[i]);
+ 	
+ }
+ 
 
  create_f = 0;
 
  last_file = file;
 
  if(!file) {
- 	printf("exiting: no buffers to edit\n");
+// 	printf("exiting: no buffers to edit\n");
 	return 1;
  }
+ 
+ signal (SIGABRT, &debug_exit);
+ signal (SIGTERM, &sig_handler);
+ signal (SIGSEGV, &sigsegv_handler);
+ 
+ signal (SIGQUIT, SIG_IGN);
+/*
+ signal (SIGTSTP, SIG_IGN);
+*/
+/*
+*/
+ signal (SIGTSTP, &sig_tstop);
+ signal (SIGCONT, &sig_cont);
+ atexit( &sig_handler );
+// atexit( &debug_exit );
+
    
  while(file->prev)
 	file = file->prev;
 
- tcgetattr(0, &term);
- tcgetattr(0, &restore);
- term.c_iflag &= ~IXON;
- term.c_lflag &= ~(ICANON|ECHO);
- tcsetattr(0, TCSANOW, &term);
+ init2();
+ 
+ set_raw_mode(INIT);
+ set_raw_mode(ON);
 
- getsize();
- _width = _cols;
-// _width = _cols-60;
-
- _wintop = 1 + 1;
- _winbot = _rows - 3;
- _wincur = ( _winbot - _wintop ) / 2 + _wintop;
-
- set_scroll_win(_wintop, _winbot);
-
- vert_jmp = (_winbot - _wintop) / 2;
-
- moveyx(_wincur, 1);
- redraw_screen();
 
  while( 1 ) {
 loop:
-	show_bar();
+	ioctl (STDOUT_FILENO, TIOCGWINSZ, &ws);
+	if (ws.ws_row != trm_rows || ws.ws_col != trm_cols)
+	{
+		trm_rows = ws.ws_row;
+		trm_cols = ws.ws_col;
+		resize();
+		redraw_screen();
+/*
+		show_bar(SH_ALL);
+*/
+	}
+	
+/*	
+	show_bar(SH_MASK);
+*/
+	
+		
 	need_goto = 0;
-	com_key = getchar();
- 
+	
+	
+/*
+goto askch;	
+*/
+askch:	
+	com_key = askchar();
+	
+	if (com_key == 27)
+/*
+	{
+		tcflush(0, TCIOFLUSH);
+		tcflush(1, TCIOFLUSH);
+	}
+*/
+	{
+		com_key = askchar();
+		if (com_key == '[' || com_key == 'O')
+		{
+			askchar();
+			goto askch;
+		}
+	}
 	message("");
+ 
+	cmd = NULL;
+	pfunc = NULL;
+	cmd = command_char(com_key);
+	if (cmd)
+	pfunc = cmd->noargsfunc;
+	
 
-	pfunc =	command_char(com_key);
+	 if (file->cur_line == NULL)
+	 if (pfunc == del_char 
+	 	|| pfunc == case_word
+		|| pfunc == case_backward
+		|| pfunc == case_char
+		|| pfunc == move_word_back
+		|| pfunc == insert_indent
+		|| pfunc == insert_string
+		|| pfunc == insert_string_after
+		|| pfunc == cmd_edit_line_begin
+		|| pfunc == cmd_edit_line_end
+		|| pfunc == concat_lines
+		|| pfunc == change_char
+		|| pfunc == insert_space
+		|| pfunc == insert_char
+		|| pfunc == insert_char_next
+		|| pfunc == move_down_half_screen
+		|| pfunc == move_up_half_screen
+		|| pfunc == move_down_one
+		|| pfunc == move_up_one
+		|| pfunc == move_up_block
+		|| pfunc == move_down_block
+		|| pfunc == move_first_line
+		|| pfunc == move_last_line
+		|| pfunc == move_first_col
+		|| pfunc == move_last_col
+		|| pfunc == move_forward_one
+		|| pfunc == move_forward_hs
+		|| pfunc == move_backward_one
+		|| pfunc == move_backward_hs
+		|| pfunc == move_bow
+		|| pfunc == move_eow
+		|| pfunc == del_word
+		|| pfunc == cmd_del_word
+		|| pfunc == cmd_change_word
+		|| pfunc == cmd_simple_find
+		|| pfunc == cmd_find_name
+		|| pfunc == cmd_find_beginning
+		|| pfunc == refind
+		|| pfunc == alt_refind
+		|| pfunc == cmd_replace_marks
+		|| pfunc == cmd_replace_whole
+		|| pfunc == cmd_rename_marks
+		|| pfunc == cmd_rename_whole
+		|| pfunc == cmd_repeat_repl_marks
+		|| pfunc == cmd_repeat_rename_marks
+		|| pfunc == cmd_repeat_repl_whole
+		|| pfunc == cmd_repeat_rename_whole
+		|| pfunc == go_mark_next
+		|| pfunc == go_mark_prev
+		|| pfunc == go_mark_last
+		|| pfunc == yank
+		|| pfunc == cmd_del_line
+		|| pfunc == enframe_cmd
+		|| pfunc == enframe_alt_ind_cmd
+		|| pfunc == enframe_alt_noind_cmd
+		|| pfunc == cmd_goto_line
+	/*
+		|| pfunc == 
+		|| pfunc == 
+		|| pfunc == 
+		|| pfunc == 
+	*/
+		)
+	 {
+		message("Buffer is empty!");
+		continue;;
+	 }
+	
+	 if ( pfunc == insert_indent || pfunc == cmd_replace_marks
+			|| pfunc == cmd_rename_marks || pfunc == cmd_repeat_repl_marks
+			|| pfunc == cmd_repeat_rename_marks || pfunc == yank
+			|| pfunc == cmd_del_block 
+			|| pfunc == cmd_change_color 
+			|| pfunc == enframe_cmd
+			|| pfunc == enframe_alt_ind_cmd
+			|| pfunc == enframe_alt_noind_cmd
+		)
+	 if (auto_set_mark()) continue;
+	
+	/*  undo */
+	 if (pfunc == insert_char || pfunc == insert_char_next || 
+		 pfunc == change_char || pfunc == insert_space ||
+		 pfunc == del_char || pfunc == cmd_del_endline ||
+		 pfunc == cmd_del_word || pfunc == cmd_change_word ||
+		 pfunc == cmd_del_long_word || pfunc == cmd_change_long_word ||
+		 pfunc == case_word || pfunc == case_backward ||
+		 pfunc == case_char ||
+	 	 pfunc == insert_string ||
+	 	 pfunc == insert_string_after
+		 )
+		fill_undo(REPLACE, file->cur_line, file->cur_line, file->cur_line->backw,
+						file->cur_line->backw, file->cur_line->forw);
+	
+	
+	 if (pfunc == cmd_edit_new_line_after)
+		fill_undo(DELETE, NULL, NULL, NULL, cl, cl ? cl->forw : NULL);
+	
+	 if (pfunc == cmd_edit_new_line_before)
+		fill_undo(DELETE, NULL, NULL, NULL, cl ? cl->backw : NULL, cl);
+	
+	 if (pfunc == cmd_del_line)
+		fill_undo(INSERT, cl, cl, cl->backw, NULL, NULL);  
+		
+	 if (pfunc == cmd_del_block)
+		fill_undo(INSERT, file->copy_start_pos, file->copy_end_pos, 
+				file->copy_start_pos->backw, NULL, NULL);
+		
+	 if (pfunc == concat_lines)
+	 if (cl->forw)
+		fill_undo(REPLACE, cl, cl->forw, 
+				cl->backw, cl->backw, cl->forw->forw);
+		
+	 if (pfunc == cmd_paste ||
+	 	pfunc == cmd_make_line_after)
+		fill_undo(DELETE, NULL, NULL, NULL, cl, (!cl) ? NULL : cl->forw);  
+		
+	 if (pfunc == cmd_paste_before ||
+	 	pfunc == cmd_make_line_before)
+		fill_undo(DELETE, NULL, NULL, NULL, (!cl) ? NULL : cl->backw, cl);  
+		
+	 if (pfunc == new_func_templ)
+		fill_undo(DELETE, NULL, NULL, NULL, cl, (!cl) ? NULL : cl->forw);  
+	
+/*
+	 if (!strcmp(cmd->name, "enframe") ||
+	 	!strcmp(cmd->name, "enframe_alt")
+	 	)
+*/
+	 if (pfunc == enframe_cmd ||
+	 	pfunc == enframe_alt_ind_cmd ||
+	 	pfunc == enframe_alt_noind_cmd)
+		fill_undo(REPLACE, 
+			file->copy_start_pos, file->copy_end_pos,
+			file->copy_start_pos->backw,
+			file->copy_start_pos->backw, file->copy_end_pos->forw  
+			);
+	 	
+	 if (pfunc)
+		pfunc();
 
 
 	if( key_valid ) {
@@ -247,7 +497,7 @@ loop:
 	if (_switch_key_mode == 1) {
 		cmd_mask = ~cmd_mask;
 		_switch_key_mode = 0;
-		show_bar();
+		show_bar(SH_FLAG);
 	}
 	goto loop;
  }
@@ -265,11 +515,9 @@ loop:
 int
 switch_mode (int flag) 
 {
- cmd_mask = (cmd_mask & flag) == flag ? cmd_mask & ~flag : cmd_mask | flag;
+ cmd_mask ^= flag;
 
- sprintf(msg, "switch... cmd_mask: %d", cmd_mask);
- message(msg);
- show_bar();
+ show_bar(SH_FLAG);
  return 0;
 }
 
@@ -278,7 +526,9 @@ int
 cmd_switch_alt_mode() 
 {
  switch_mode (ALT_FLAG);
+/*
  show_bar();
+*/
  return 0;
 }
 
@@ -287,7 +537,9 @@ int
 cmd_switch_num_row_mode() 
 {
  switch_mode (NUM_ROW_FLAG);
+/*
  show_bar();
+*/
  return 0;
 }
 
@@ -296,9 +548,12 @@ int
 cmd_switch_search_mode() 
 {
  switch_mode (SRCH_FLAG);
+/*
  show_bar();
+*/
  return 0;
 }
+
 
 int
 switch_global()
@@ -310,37 +565,34 @@ switch_global()
 
 
 int
-invoke_command() {
- char buf[MAX_LINE];
-
- getstring(buf, "Command:");
- command(buf);
- return 0;
-}
-
-
-int
-save_cur() 
+savecur() 
 {
+#ifdef NO_GETPOS
+ tc_savecur();
+#else
  if (file->top == MAX_STACK) {
  	gmessage("Stack is full!");
 	return 1;
  } 
  file->top++;
  getpos(&file->y_cur[file->top], &file->x_cur[file->top]);
+#endif
  return 0;
 }
 
-
 int
-rest_cur() 
+restcur() 
 {
+#ifdef NO_GETPOS
+ tc_restcur();
+#else
  if (file->top == -1) {
  	gmessage("Stack is empty!");
 	return 1;
  }
  moveyx(file->y_cur[file->top], file->x_cur[file->top]);
  file->top--;
+#endif
  return 0;
 }
 
@@ -350,33 +602,102 @@ getsize ()
 {
  struct winsize ws;
  ioctl (STDOUT_FILENO, TIOCGWINSZ, &ws);
- _rows = ws.ws_row;
- _cols = ws.ws_col;
+ trm_rows = ws.ws_row;
+ trm_cols = ws.ws_col;
  return 0;
 }
 
-
-int 
-setnocanon()
+int
+resize()
 {
- struct termios term;
- tcgetattr(0, &term);
- term.c_lflag &= ~ICANON;
- tcsetattr(0, TCSANOW, &term);
+ trm_width = trm_cols;
+ 
+ _wintop = 1 + ((set_show_buffers) ? 2 : 1);
+ dwin_bot = trm_rows - 2;
+ dwin_top = dwin_bot - dwin_size + 1;
+ _winbot = (dwin_size) ? dwin_top - 1 : trm_rows - 2; 
+ _wincur = ( _winbot - _wintop ) / 2 + _wintop;
+ 
+ savecur(); 
+ set_scroll_win(_wintop, _winbot);
+ restcur(); 
+ 
+ vert_jmp = (_winbot - _wintop) / 2;
+
  return 0;
 }
 
-
-int 
-setcanon()
+int
+do_nothing()
 {
- struct termios term;
- tcgetattr(0, &term);
- term.c_lflag |= ICANON;
- tcsetattr(0, TCSANOW, &term);
+ int i;
+}
+
+int
+dprint(char* format, ...)
+{
+ if (!dwin_size)
+ 	return 1;
+ 	
+ va_list ap;
+ 
+ if (file->y_dwin < dwin_top)
+ 	file->y_dwin = dwin_top;
+ 	
+ if (file->y_dwin > dwin_bot)
+ 	file->y_dwin = dwin_bot;
+ 	
+ if (file->x_dwin == 0)
+ 	file->x_dwin = 2;
+ 	
+ color(RED);
+/*
+ printf ("y,x: %d, %d\n", file->y_cur[file->top], file->x_cur[file->top]);
+*/
+ savecur(); 
+ set_scroll_win(dwin_top, dwin_bot);
+ va_start(ap, format);
+ moveyx(file->y_dwin, file->x_dwin);
+/*
+ printf ("y,x: %d, %d\n", file->y_cur[file->top], file->x_cur[file->top]);
+*/
+ vfprintf(stderr, format, ap);
+ color(NRM);
+ va_end(ap);
+ getpos(&file->y_dwin, &file->x_dwin);
+ restcur();
+ set_scroll_win(_wintop, _winbot);
  return 0;
 }
 
+int
+set_raw_mode(int act)
+{
+ static struct termios term, restore;
+/*
+ dprint("set_raw_mode(%s)\n", act ? "ON" : "OFF");
+*/
+ 
+ if (act == INIT) {
+	 tcgetattr(0, &term);
+	 tcgetattr(0, &restore);
+	 term.c_iflag &= ~IXON;
+	 term.c_lflag &= ~(ICANON|ECHO);
+	 
+	 term.c_lflag |= ISIG;
+/*
+	 term.c_lflag &= ~ISIG;
+*/
+	// term.c_iflag &= ~(INLCR|IGNCR|ICRNL);
+ }
+ if (act == ON) {
+	 tcsetattr(0, TCSANOW, &term);
+ }
+ if (act == OFF)
+ 	tcsetattr(0, TCSANOW, &restore);
+ 
+ return 0;
+}
 
 int 
 setnoecho()
@@ -387,7 +708,6 @@ setnoecho()
  tcsetattr(0, TCSANOW, &term);
  return 0;
 }
-
 
 int 
 setecho()
@@ -402,24 +722,78 @@ setecho()
 
 int
 getpos(int *y, int *x) {
+/*
+color(RED);
+printf("\ngetpos\n");
+color(NRM);
+*/
  int i = 0;
  int fd;
  int res, retval;
  char buf[30] = {0};
- memset( buf, 0, 30);
  char ch;
  int pow;
 
  *x = 0;
  *y = 0;
 
- setnocanon();
- setnoecho();
-
  res = fcntl(0, F_SETFL, O_NOCTTY);
  //res = fcntl(1, F_SETFL, O_NDELAY);
 
  res = write(1, "\033[6n", 4);
+ //setecho();
+ /*
+ fflush(stdin);
+ fflush(stdout);
+ */
+
+ for( i = 0, ch = 0; ch != 'R' /*&& res == 1 || i < 10*/; i++ ) {
+	res = read(0, &ch, 1);
+	if ( res != 1 ) {
+	   fprintf(stderr, "getpos: error reading response!\n");
+/* appeared */
+	   return 1;
+	}
+	//printf("buf[%d]: %c\n", i, ch);
+	buf[i] = ch;
+ }
+/*
+ if(i < 2) {
+	printf("i < 2\n");
+	exit(1);
+	}
+*/
+
+
+	for( i -= 2, pow = 1; buf[i] != ';'; i--, pow *= 10)
+	   *x = *x + ( buf[i] - '0' ) * pow;
+
+	for( i-- , pow = 1; buf[i] != '['; i--, pow *= 10)
+	   *y = *y + ( buf[i] - '0' ) * pow;
+ 
+   return 0;
+}
+
+int
+deb_getpos(int *y, int *x) {
+ int i = 0;
+ int fd;
+ int res, retval;
+ char buf[30] = {0};
+// memset( buf, 0, 30);
+ char ch;
+ int pow;
+
+ *x = 0;
+ *y = 0;
+
+ res = fcntl(0, F_SETFL, O_NOCTTY);
+ //res = fcntl(1, F_SETFL, O_NDELAY);
+
+ setnoecho();
+// res = write(1, "\033[6n", 4);
+// setecho();
+ return 0;
 // sleep(4);
  //setecho();
  /*
@@ -454,7 +828,6 @@ getpos(int *y, int *x) {
 	for( i-- , pow = 1; buf[i] != '['; i--, pow *= 10)
 	   *y = *y + ( buf[i] - '0' ) * pow;
  
- //setcanon();
    return 0;
 }
 
@@ -499,10 +872,10 @@ del_char()
 	return 0;
  }
 */
- del(&file->cur_line->str, file->offs+1, 1);
+ del(&cur_str, offs+1, 1);
  print_cur_line();
- file->cur_line->len = strlen(file->cur_line->str);
- if(file->offs == file->cur_line->len)
+ file->cur_line->len = strlen(cur_str);
+ if(offs == file->cur_line->len)
 	move_backward(1);
  return 0;
 }
@@ -512,11 +885,11 @@ int
 case_word()
 {
  int i;
- for(i = file->offs; isalpha( file->cur_line->str[i] ); i++) {
- if('a' <= file->cur_line->str[i] && file->cur_line->str[i] <= 'z')
-   file->cur_line->str[i] = toupper(file->cur_line->str[i]);
+ for(i = offs; isalpha( cur_str[i] ); i++) {
+ if('a' <= cur_str[i] && cur_str[i] <= 'z')
+   cur_str[i] = toupper(cur_str[i]);
  else
-   file->cur_line->str[i] = tolower(file->cur_line->str[i]);
+   cur_str[i] = tolower(cur_str[i]);
  }
  print_cur_line();
  return 0;
@@ -526,11 +899,11 @@ case_word()
 int
 case_backward()
 {
- if(file->offs == 0) return 0;
+ if(offs == 0) return 0;
 
  int i;
- for(i = file->offs - 1; (isalnum(file->cur_line->str[i]) || file->cur_line->str[i] == '_') && i >= 0; i--)
-   file->cur_line->str[i] = toupper(file->cur_line->str[i]);
+ for(i = offs - 1; (isalnum(cur_str[i]) || cur_str[i] == '_') && i >= 0; i--)
+   cur_str[i] = toupper(cur_str[i]);
  print_cur_line();
  return 0;
 }
@@ -539,37 +912,17 @@ case_backward()
 int
 case_char()
 {
- if (isalpha( file->cur_line->str[file->offs] )) {
- if('a' <= file->cur_line->str[file->offs] && file->cur_line->str[file->offs] <= 'z')
-   file->cur_line->str[file->offs] = toupper(file->cur_line->str[file->offs]);
+ if (isalpha( cur_str[offs] )) {
+ if('a' <= cur_str[offs] && cur_str[offs] <= 'z')
+   cur_str[offs] = toupper(cur_str[offs]);
  else
-   file->cur_line->str[file->offs] = tolower(file->cur_line->str[file->offs]);
+   cur_str[offs] = tolower(cur_str[offs]);
  }
  print_cur_line();
  return 0;
 }
 
 
-int
-move_word_back()
-{
- int tmp = 0;
- move_backward(1);  
- tmp = file->offs;
- if( isalnum(file->cur_line->str[file->offs]) )
-	 while( isalnum(file->cur_line->str[tmp]) )
-	   tmp--;
- else
-	 while( !isalnum(file->cur_line->str[tmp]) )
-	   tmp--;
- tmp++;
- move_first_col();
- move_forward(tmp+0);
- return 0; 
-}
-
-
-#if 0
 char*
 insert_str (char **pstr1, int n, char *str2)
 {
@@ -588,7 +941,6 @@ insert_str (char **pstr1, int n, char *str2)
  free(buf);
  return NULL;
 }
-#endif
 
 
 char*
@@ -613,11 +965,14 @@ insert_ch (char **pstr, int n, char c)
  return NULL;
 }
 
+
 int
 insert_indent()
 {
  char ch;
- ch = getchar();
+ ch = mget_char();
+ if (ch == 0)
+ 	return 1;
  line_t *line;
 
  for (line = file->copy_start_pos; line != file->copy_end_pos->forw; line = line->forw) {
@@ -651,21 +1006,38 @@ simple_print(int n, char* str)
 
 
 int
+mget_char()
+{
+ int c = getchar();
+ 
+/*
+ if (c == 27)
+ 	return 1;
+*/
+ if ((c == '\t' || !iscntrl(c)) && isascii(c))
+ 	return c;
+ else
+ 	return 0;
+ 	
+ return 0;
+}
+
+
+int
 readstring(char* buf, int nmax) {
  int i, tmp, res, ret;
  char ch;
  int y, x;
 
-/*
- setnocanon();
- setnoecho();
-*/
 
  getpos(&y, &x);
+// savecur();
  
  i = 0;
  do {
-	res = read(0, &ch, 1);
+//	res = read(0, &ch, 1);
+//	ch = getchar();
+	ch = askchar();
 
 	switch (ch) {
 	case BCSP:
@@ -714,23 +1086,29 @@ readstring(char* buf, int nmax) {
 	}
 /*
  *(buf+i) = 0;
- save_cur();
- moveyx(y, x);
+ savecur();
  printf("%s"CLR, buf);
-// rest_cur();
+// restcur();
 */
- } while ( ch != 0 );
+ } while ( ch != 0 && i < nmax);
+// dpriv(nmax, d); 
+ buf[nmax-1] = 0;
+ moveyx(y, x);
  return ret; 
 }
 
 
 int
 getstring(char* buf, char* str) {
- save_cur();
- moveyx(_rows-1, 1);
+ int ret;
+ savecur();
+ moveyx(trm_rows-1, 1);
  printf(CLL"%s", str);
- readstring(buf, MAX_LINE);
- rest_cur();
+ ret = readstring(buf, MAX_LINE);
+ moveyx(trm_rows-1, 1);
+ printf(CLL);
+ restcur();
+ return ret;
 }
 
 
@@ -738,25 +1116,27 @@ int
 insert_string()
 {
  int i, res, ret;
+ int k;
  char ch;
  char *tmp;
  int tmp_len = 0;
  int tmp_offs;
 
- setnocanon();
- setnoecho();
-
+ renumber_all();
+ show_bar(SH_LINE);
+ 
  do {
-	res = read(0, &ch, 1);
+//	res = read(0, &ch, 1);
+	ch = askchar();
 
 	switch (ch) {
 	case BCSP:
 		ch = DEL;
 
 	case DEL:
-		if( file->offs ) {
+		if( offs ) {
 			move_backward(1);
-			del(&file->cur_line->str, file->offs + 1, 1);
+			del(&cur_str, offs + 1, 1);
 			file->cur_line->len--;
 		}
 		break;
@@ -768,50 +1148,54 @@ insert_string()
 		break;
 
 	case 10:
-		file->cur_line->len = strlen(file->cur_line->str);
-		tmp = file->cur_line->str + file->offs;
+		file->cur_line->len = strlen(cur_str);
+		tmp = cur_str + offs;
 		tmp_len = strlen(tmp);
-			file->cur_line = make_line_after(file->cur_line);
-		file->offs = init_line(file->cur_line);
+		file->cur_line = make_line_after(file->cur_line);
+		k = init_line(file->cur_line);
 		
-		file->cur_line->str = realloc(file->cur_line->str,
-			strlen(file->cur_line->str) + tmp_len + 1 );
-		strcat(file->cur_line->str, tmp);
+		cur_str = realloc(cur_str,
+			strlen(cur_str) + tmp_len + 1 );
+		strcat(cur_str, tmp);
 		file->cur_line->backw->str =
-			realloc( file->cur_line->backw->str, file->cur_line->backw->len - tmp_len+1 );
-		file->cur_line->backw->str[file->cur_line->backw->len - tmp_len] = 0;
-		tmp_offs = file->offs;
-		file->offs = 0;
-		file->x_curs = 1;
+			realloc( file->cur_line->backw->str, cl->backw->len - tmp_len+1 );
+		cl->backw->str[cl->backw->len - tmp_len] = 0;
+		tmp_offs = offs;
+		reset_x();
 //		fpr = 1;
-		for (i = 0; i < tmp_offs; i++)
-			file->x_curs = get_next_move(file->cur_line->str[i]);
-		file->offs = i;
-		moveyx(_wincur, file->x_curs);
+		for (; k > 0; k--)
+			get_next_move_x();
+//		offs = i;
+		place_cursor();
 
 /*
 		move_forward(tmp_offs+1);
-		if(file->cur_line->str[file->offs] != '\0')
+		if(cur_str[offs] != '\0')
 		{
 			message("force_forward");
-			file->offs += 1;
-			file->x_curs = get_next_move(file->cur_line->str[i]);
-			moveyx(_wincur, file->x_curs);
+			offs += 1;
+			file->x_curs = get_next_move_x(cur_str[i]);
+			place_cursor();
 		}
 */		
 
 /*
-		fprintf(erlog, "case 10: offs: %d, x_curs: %d\n", 
-				file->offs, file->x_curs);
+		fprintf(erlog, "case 10: offset: %d, x_curs: %d\n", 
+				offs, file->x_curs);
 		fflush(erlog);
 */
 
-//		moveyx(_wincur, file->x_curs);
+//		place_cursor();
 	
 		redraw_screen();
+/*
+		renumber_all();
+		show_bar(SH_LINE);
+*/
+
 		/*
-		sprintf(msg, "case 10: offs: %d, tmp_offs: %d, x_curs: %d\n", 
-					file->offs, tmp_offs, file->x_curs);
+		sprintf(msg, "case 10: offset: %d, tmp_offs: %d, x_curs: %d\n", 
+					offs, tmp_offs, file->x_curs);
 		message(msg);
 		*/
 		break;
@@ -823,70 +1207,100 @@ insert_string()
 	default:
  		if (!isprint(ch) && ch != '\t')
 			break;
-		insert_ch(&file->cur_line->str, file->offs, ch);
+		insert_ch(&cur_str, offs, ch);
 		if(ch == '\t')
 			file->x_curs = nexttab1();
 		else
 			file->x_curs++;
-		file->offs++;
+		offs++;
 		file->cur_line->len++;
 		break;
 		}
-	 if(file->x_curs <= _width) {
-//		moveyx(_wincur, file->x_curs);
+	 if(file->x_curs <= trm_width) {
+//		place_cursor();
 	 }
 	 else {
 		file->cur_line->x -= _h_scroll;
 //		print_cur_line();
 		file->x_curs -= _h_scroll;
-//		moveyx(_wincur, file->x_curs);
+//		place_cursor();
 	 }
 //sleep(1);
 	print_cur_line();
-	moveyx(_wincur, file->x_curs);
-
-	show_bar();
+	place_cursor();
 
  } while ( ch != 0 );
- file->cur_line->len = strlen( file->cur_line->str);
+ file->cur_line->len = strlen( cur_str);
+ 
+ if (cl->str[offs] == 0)
+ 	move_backward(1);
+ 	
  return ret; 
 }
 
+
 int
-get_next_move(char c)
+init_line_str(line_t *ln, char* str)
 {
- if (c == '\0')
-	return file->x_curs; 
+ int i;
+ 
+ ln->str = strdup(str);
+ 
+ ln->x = 1;
+/*
+ if (ln->backw)
+	ln->color = ln->backw->color;
  else
- if(c == '\t')
-	return nexttab1();
+*/
+	ln->color = 0;
+// return strlen(ln->str);
+ return 0;
+}
+
+int
+init_line( line_t *ln )
+{
+ int i;
+
+ if (ln->backw && autoindent) {
+	for (i = 0; isspace(ln->backw->str[i]); i++);
+	ln->str = malloc(i + 1);
+	ln->str[i] = '\0';
+	strncpy(ln->str, ln->backw->str, i);
+ }
  else
-	return file->x_curs + 1;
+ {
+	ln->str = malloc(1);
+	*(ln->str) = '\0';
+	ln->len = 0;
+ }
+ ln->x = 1;
+ if (ln->backw)
+	ln->color = ln->backw->color;
+ else
+	ln->color = 0;
+// return strlen(ln->str);
+// return 0;
+ return i;
 }
 
 int
 insert_string_after()
 {
  int ret;
- if (*file->cur_line->str == '\0') {
-	ret = insert_string();
+ if (*cur_str == '\0') {
+//	ret = insert_string();
 	return 0;
  }
- save_cur();
-// move_forward(1);
- if (file->cur_line->str[file->offs] == '\t')
-	file->x_curs = nexttab1();
- else
-	file->x_curs++;
- file->offs++;
-// moveyx(file->y_cur, file->x_curs);
- rest_cur();
- ret = insert_string();
- file->offs--;
+ offs++;
+ file->x_curs++;
+ place_cursor();
+ insert_string();
  file->x_curs--;
-// moveyx(file->y_cur, file->x_curs);
-// rest_cur();
- return ret;
+ place_cursor();
+ offs--;
+ 
+ return 0;
 }
 
 
@@ -895,30 +1309,26 @@ cmd_edit_new_line_before()
 {
  file->cur_line = make_line_before(file->cur_line);
  init_line(file->cur_line);
- reset();
+ reset_x();
  redraw_screen();
  insert_string();
  redraw_screen();
  return 0;
 }
 
-
 int
 cmd_edit_new_line_after()
 {
- int i;
  file->cur_line = make_line_after(file->cur_line);
- file->offs = init_line(file->cur_line);
- file->x_curs = 1;
-		for (i = 0; i < file->offs; i++)
-			file->x_curs = get_next_move(file->cur_line->str[i]);
-		moveyx(_wincur, file->x_curs);
+ init_line(file->cur_line);
+ reset_x();
+ while ( !get_next_move_x() );
+ place_cursor();
  redraw_screen(); //need partial scroll
  insert_string();
  redraw_screen();
  return 0;
 }
-
 
 int
 cmd_edit_line_begin()
@@ -941,19 +1351,21 @@ cmd_edit_line_end()
 int
 concat_lines()
 {
+ if (!cl->forw) return 0;
+ 
  char *buf;
  line_t *tmp;
  
- buf = malloc( strlen(file->cur_line->str) + strlen(file->cur_line->forw->str) + 1 );
- strcpy(buf, file->cur_line->str);
- strcat(buf, file->cur_line->forw->str);
- free(file->cur_line->str);
- file->cur_line->str = buf;
+ buf = malloc( strlen(cur_str) + strlen(cl->forw->str) + 1 );
+ strcpy(buf, cur_str);
+ strcat(buf, cl->forw->str);
+ free(cur_str);
+ cur_str = buf;
  
- destroy_line(file->cur_line->forw);
+// destroy_line(file->cur_line->forw);
+ delete_lines(cl->forw, cl->forw);
  
  redraw_screen();
- calculate_all_lengths();
  
  return 0;
 }
@@ -989,12 +1401,45 @@ destroy_line(line_t *line)
    line->backw->forw = line->forw;
  if(line->forw)
    line->forw->backw = line->backw;
- free(tmp->str);
- free(tmp);
+ free_line(tmp);
 
  return 0;
 }
 
+int
+new_func_templ()
+{
+ line_t *l = cl;
+/*
+ l = make_line_after_str(l, "");
+*/
+ l = make_line_after_str(l, "");
+ l = make_line_after_str(l, "int");
+ l = make_line_after_str(l, "func()");
+ cl = l;
+ l = make_line_after_str(l, "{");
+/*
+ l = make_line_after_str(l, " int i;");
+*/
+ l = make_line_after_str(l, " ");
+ l = make_line_after_str(l, " return 0;");
+ l = make_line_after_str(l, "}");
+/*
+ l = make_line_after_str(l, "");
+*/
+ l = make_line_after_str(l, "");
+ redraw_screen();
+ return 0;
+}
+
+line_t*
+make_line_after_str(line_t *prev, char* str)
+{
+ line_t* l;
+ l = make_line_after(prev);
+ init_line_str(l, str);
+ return l;
+}
 
 line_t*
 make_line_after(line_t *prev)
@@ -1048,7 +1493,7 @@ cmd_make_line_before()
 {
  file->cur_line = make_line_before(file->cur_line);
  init_line(file->cur_line);
- reset();
+ reset_x();
  redraw_screen();
 }
 
@@ -1058,34 +1503,8 @@ cmd_make_line_after()
 {
  file->cur_line = make_line_after(file->cur_line);
  init_line(file->cur_line);
- reset();
+ reset_x();
  redraw_screen();
-}
-
-
-int
-init_line( line_t *ln )
-{
- int i;
-
- if (ln->backw && autoindent) {
-	for (i = 0; isspace(ln->backw->str[i]); i++);
-	ln->str = malloc(i + 1);
-	ln->str[i] = '\0';
-	strncpy(ln->str, ln->backw->str, i);
- }
- else
- {
-	ln->str = malloc(1);
-	*(ln->str) = '\0';
-	ln->len = 0;
- }
- ln->x = 1;
- if (ln->backw)
-	ln->color = ln->backw->color;
- else
-	ln->color = 0;
- return strlen(ln->str);
 }
 
 
@@ -1098,8 +1517,8 @@ make_line()
  if( file->cur_line == NULL ) {
 	file->cur_line = malloc( sizeof(line_t) );
 	file->cur_line->backw = NULL;
-	file->cur_line->str = malloc(1);
-	*(file->cur_line->str) = '\0';
+	cur_str = malloc(1);
+	*(cur_str) = '\0';
 	return 0;
  }
 
@@ -1109,7 +1528,7 @@ make_line()
 	next->backw = file->cur_line;
 	file->cur_line->backw = NULL;
 	file->cur_line->forw = next;
-	file->cur_line->str = calloc(1,1);
+	cur_str = calloc(1,1);
 	file->cur_line->len = 0;
 	redraw_screen();
 	moveyx(_wincur, 1);
@@ -1125,7 +1544,7 @@ make_line()
 
  file->cur_line->backw = prev;
  file->cur_line->forw = next;
- file->cur_line->str = calloc(1,1);
+ cur_str = calloc(1,1);
  file->cur_line->len = 0;
  
  redraw_screen();
@@ -1138,9 +1557,11 @@ make_line()
 int
 change_char()
 {
- char c = getchar();
+ char ch = mget_char();
+ if (ch == 0)
+ 	return 1;
 
- file->cur_line->str[file->offs] = c;
+ cur_str[offs] = ch;
  print_cur_line();
 }
 
@@ -1148,7 +1569,7 @@ change_char()
 int
 insert_space()
 {
- insert_ch( &file->cur_line->str, file->offs, ' ');
+ insert_ch( &cur_str, offs, ' ');
  file->cur_line->len++;
  print_cur_line();
  return 0;
@@ -1158,9 +1579,11 @@ insert_space()
 int
 insert_char()
 {
- char ch = getchar();
+ char ch = mget_char();
+ if (ch == 0)
+ 	return 1;
 
- insert_ch( &file->cur_line->str, file->offs, ch);
+ insert_ch( &cur_str, offs, ch);
  file->cur_line->len++;
  print_cur_line();
  position_cursor();
@@ -1171,14 +1594,16 @@ insert_char()
 int
 insert_char_next()
 {
- char ch = getchar();
-// save_cur();
+ char ch = mget_char();
+ if (ch == 0)
+ 	return 1;
+// savecur();
  /*
  moveyx(file->y_cur, file->x_cur + 1);
- file->offs++;
+ offs++;
  */
  move_forward(1);
- insert_ch( &file->cur_line->str, file->offs, ch);
+ insert_ch( &cur_str, offs, ch);
  file->cur_line->len++;
  print_cur_line();
  position_cursor();
@@ -1188,13 +1613,13 @@ insert_char_next()
 
 
 int 
-read_line(FILE* file, char* buf)
+n_read_line(FILE* file, char* buf, int n)
 {
- int fd, i;
+ int i;
  char c;
 
  c = fgetc(file);
- for( i = 0; c != '\n' && c != EOF && c != '\0' && c != '\r'; i++ ) {
+ for( i = 0; c != '\n' && c != EOF && c != '\0' && c != '\r' && i < n; i++ ) {
 	buf[i] = c;
 	c = fgetc(file);
  }
@@ -1202,8 +1627,13 @@ read_line(FILE* file, char* buf)
 
  if (c == '\r')
 	c = fgetc(file);
-	if (c != '\n')
-		ungetc(c, file);
+/*
+//???????????
+ if (c != '\n')
+	ungetc(c, file);
+*/
+ if (i == n)
+ 	return EOF;
  return c;
 }
 
@@ -1214,18 +1644,14 @@ read_file(FILE* file)
  char buf[MAX_LINE] = {0};
  line_t *lines = NULL;
 
- while( read_line(file, buf) != EOF ) {
+ while( n_read_line(file, buf, MAX_LINE) != EOF ) {
 	lines = make_line_after(lines);
-	lines->len = strlen( buf );
-	lines->str = malloc( lines->len + 1 );
-	strcpy( lines->str, buf);
+	lines->str = strdup(buf);
 	lines->x = 1;
 	lines->color = 0;
  }
 	lines = make_line_after(lines);
-	lines->len = strlen( buf );
-	lines->str = malloc( lines->len + 1 );
-	strcpy( lines->str, buf);
+	lines->str = strdup(buf);
 	lines->x = 1;
 	lines->color = 0;
 
@@ -1243,14 +1669,29 @@ open_file(char *name) {
  FILE *f;
  int file_len;
  buffer_t *tmp_prev, *tmp_next;
+ 
+#ifdef READ
+ readonly = 1;
+#endif
 
- if (create_f == 1)
+ if (readonly)
+	create_f = 0;
+
+ if (create_f)
  	fd = open(name, O_RDWR | O_CREAT, 0666);
+ else 	
+ if (readonly)
+ 	fd = open(name, O_RDONLY);
  else
  	fd = open(name, O_RDWR);
 
+/*
+ snprintf(msg, MAX_LINE, "open %s: %s", name, strerror(errno));
+ gmessage(msg);
+*/
+ 	
  if ( fd < 0 ) {
-	perror("open");
+	perror(name);
 	return 1;
  }
 
@@ -1272,14 +1713,21 @@ open_file(char *name) {
 	file->next = NULL;
  }
 
- file->offs = 0;
+ offs = 0;
  file->x_curs = 1;
+/*
  file->fd = fd;
+*/
  file->top = -1;
 
  strcpy(file->filename, name);
- f = fdopen(fd, "r+");
+ if (readonly)
+	f = fdopen(fd, "r");
+ else
+	f = fdopen(fd, "r+");
+/*
  file->f = f;
+*/
 
  make_backup_copy(name);
 
@@ -1287,7 +1735,7 @@ open_file(char *name) {
  lseek(fd, 0, SEEK_SET);
 
  if( file_len )
-	file->cur_line = read_file(f);
+	file->cur_line = read_file(f);//BUG
  else
 	file->cur_line = NULL;
  return 0;
@@ -1301,7 +1749,9 @@ close_file() {
  if(!file)
 	return 0;
 
+/*
  remove_backup(file->filename);
+*/
  if(!file->prev && !file->next) {
  	free_lines(get_head(), NULL);
  	free(file);
@@ -1319,15 +1769,24 @@ close_file() {
  file = tmp;
 
  redraw_screen();
+ 
  return 0;
 }
 
 
 int
 reopen_file () {
- rewind(file->f);
+ set_raw_mode(ON);
+ FILE* f = fopen(file->filename, "r+");
+ if (!f)
+ {
+	sprintf(msg, "%s", strerror(errno));
+	message(msg);
+	return 1;
+ }
+// rewind(file->f);
  free_lines(get_head(), NULL);
- file->cur_line = read_file(file->f);
+ file->cur_line = read_file(/*file->*/f);
  redraw_screen();
  message("reopen_file()");
  return 0;
@@ -1335,11 +1794,40 @@ reopen_file () {
 
 
 int
-message(char* s)
+message1(char* s, int prior)
 {
- print_line_x(1, 1, s);
+ if (prior > msg_prior_level)
+	return 1;
+	
+ if (_wintop < 2)
+	print_line_x(1, 1, s);
+ else
+	print_line_x(1, _wintop - 1, s);
+	
+ msg_prior_level = prior;
  return 0;
 }
+
+int
+dmessage(char *s)
+{
+ message1(s, -1);
+ return 0;
+}
+
+int
+message(char* s)
+{
+ message1(s, 0);
+/*
+ savecur();
+ moveyx(1, 1);
+ printf(CLL"%s", msg);
+ restcur();
+ return 0;
+*/
+}
+
 
 int
 fmessage(char* format, ...)
@@ -1350,7 +1838,7 @@ fmessage(char* format, ...)
  va_start(ap, format);
  vsnprintf(s, MAX_LINE, format, ap);
  va_end(ap);
- print_line_x(1, 1, s);
+ message(s);
  return 0;
 }
 
@@ -1358,64 +1846,51 @@ fmessage(char* format, ...)
 int
 gmessage(char* s)
 {
- print_line_x(1, 1, s);
+ message(s);
  getchar();
  return 0;
 }
 
 
 int 
-write_buf(int fd)
+write_buf(char* name)
 {
- if (readonly) {
-	message("readonly");
-	return 1;
- }
- message("writing...");
- lseek(fd, 0, SEEK_SET);
- int i, res;
- char buf[MAX_LINE];
-// char buf[500];
- line_t *line;
+ line_t *line = get_head();
+ FILE *f = fopen(name, "w");
 
- FILE *f = fdopen(fd, "r+");
- if (!f) {
- perror("fdopen");
-   return 1;
- }
- ftruncate(fd, 0);
+ if (!f) return 1;
+   
  
-
- line = get_head();
-
- if (!line) {
- message("line == NULL");
-//	fclose(f);
-	return 0;
- }
-
- while( line->forw ) 
+/* !!! \n */   
+ if (line) 
  {
-	strcpy( buf, line->str);
-	for(i = 0; buf[i] != '\0'; i++)
-	   fputc(buf[i], f);
-	fputc('\n', f);
-	line = line->forw;
+	 while (line->forw) 
+	 {
+		fprintf(f, "%s\n", line->str);
+		line = line->forw;
+	 }
+	 fprintf(f, "%s", line->str);
  }
- strcpy( buf, line->str);
- for(i = 0; buf[i] != '\0'; i++)
-	fputc(buf[i], f);
-
- fflush(f);
-// fclose(f);
- message("writing... done");
+ fclose(f);
+ 
+ return 0;
 }
 
 
 int
 save_file() {
- if(file)
- write_buf(file->fd);
+ if(!file) return 1;
+ 
+ if (readonly) {
+	message("readonly");
+	return 1;
+ }
+ if (write_buf(file->filename) == 0)
+ {
+	message("writing... done");
+ }
+ else
+	message("writing... failed");
  return 0;
 }
 
@@ -1424,17 +1899,23 @@ int
 save_all() {
  if(!file) return 1;
  
+ if (readonly) {
+	message("readonly");
+	return 1;
+ }
+ 
  buffer_t *tmp = file;
 
  while(file->prev)
 	file = file->prev;
 
 while(file) {
-	write_buf(file->fd);
+	write_buf(file->filename);
 //	sprintf(msg, "writing %s...", file->filename);gmessage(msg);
 	file = file->next;
 }
  file = tmp;
+ message("writing all... done");
  return 0;
 }
 
@@ -1508,6 +1989,7 @@ cur_down()
  moveyx(_wincur, 1);
 }
 
+
 int
 move_down(int n)
 {
@@ -1556,10 +2038,12 @@ move_down_smooth(int n)
  int i;
 
  for( i = 0; i < n && file->cur_line->forw; i++) {
-//	reset();
+//	reset_x();
 	scroll_up();
 	file->cur_line = file->cur_line->forw;
 	print_bottom_line();
+	renumber_all();
+	show_bar(SH_LINE);
 	position_cursor();
  }
  return 0;
@@ -1572,10 +2056,12 @@ move_up_smooth(int n)
  int i;
 
  for( i = 0; i < n && file->cur_line->backw; i++) {
-//	reset();
+//	reset_x();
 	scroll_down();
 	file->cur_line = file->cur_line->backw;
 	print_top_line();
+	renumber_all();
+	show_bar(SH_LINE);
 	position_cursor();
  }
  return 0;
@@ -1604,8 +2090,8 @@ move_up_block()
  do {
 	if (file->cur_line->backw == NULL) return 0;
 	file->cur_line = file->cur_line->backw; 
- } while (!(isalpha(file->cur_line->str[0]) || file->cur_line->str[0] == '_'
-			|| file->cur_line->str[0] == '{'));
+ } while (!(isalpha(cur_str[0]) || cur_str[0] == '_'
+			|| cur_str[0] == '{'));
 
  redraw_screen();
  return 0;
@@ -1618,8 +2104,8 @@ move_down_block()
  do {
 	if (file->cur_line->forw == NULL) return 0;
 	file->cur_line = file->cur_line->forw; 
- } while (!(isalpha(file->cur_line->str[0]) || file->cur_line->str[0] == '_'
-			|| file->cur_line->str[0] == '}'));
+ } while (!(isalpha(cur_str[0]) || cur_str[0] == '_'
+			|| cur_str[0] == '}'));
 
  redraw_screen();
  return 0;
@@ -1647,317 +2133,31 @@ move_last_line()
 
 
 int
-position_cursor()
-{
- int tmp = file->x_curs;
- move_first_col();
- while(file->x_curs < tmp && file->offs + 1 < file->cur_line->len)
- move_forward(1);
-}
-
-
-int
-reset()
-{
- file->offs = 0;
- file->x_curs = 1;
- return 0;
-}
-
-
-int
-move_first_col()
-{
- file->offs = 0;
- file->x_curs = 1;
- file->cur_line->x = 1;
- moveyx(_wincur, 1);
- print_cur_line();
- return 0;
-}
-
-
-int
-move_last_col()
-{
-// move_forward(file->cur_line->len);
- move_forward(cur_len());
- return 0;
-}
-
-
-int
-move_forward(int n)
-{
- int i;
- int need_reprint = 0;
-
- file->cur_line->len = cur_len();
-
- if(fpr == 1) {
-		fprintf(erlog, "mv_forw: n: %d\n", n);
-		fprintf(erlog, "mv_forw: cur_line->len: %d\n", file->cur_line->len);
-		fflush(erlog);
- }
-
- for( i = 0; i < n; i++ )
- if ( file->offs + 1 < file->cur_line->len ) { 
-
- if(fpr == 1) {
-		fprintf(erlog, "mv_forw: offs: %d, x_curs: %d char: %c\n", file->offs, file->x_curs,
-		file->cur_line->str[file->offs]);
-		fflush(erlog);
- }
-	 if( *(file->cur_line->str + file->offs ) == '\t' )
-		file->x_curs = nexttab1();
-	 else
-		file->x_curs++;
-
-	 while (file->x_curs > _width) {
-		 file->cur_line->x -= _h_scroll;
-		 file->x_curs -= _h_scroll;
-		 need_reprint = 1;
-	 }
-	 file->offs++;
- }
-
- if(need_reprint == 1)
-   print_cur_line();
- moveyx(_wincur, file->x_curs);
- return 0;
-}
-
-int
-force_forward(int n)
-{
- int i;
- int need_reprint = 0;
-
- file->cur_line->len = cur_len();
-
- if(fpr == 1) {
-		fprintf(erlog, "force_forw: n: %d\n", n);
-		fprintf(erlog, "force_forw: cur_line->len: %d\n", file->cur_line->len);
-		fflush(erlog);
- }
-
- for( i = 0; i < n; i++ )
-/* if ( file->offs + 1 < file->cur_line->len ) */{ 
-
- if(fpr == 1) {
-		fprintf(erlog, "force_forw: offs:%d, x_curs:%d char:%d\n", file->offs, file->x_curs,
-		file->cur_line->str[file->offs]);
-		fflush(erlog);
- }
-	 if( *(file->cur_line->str + file->offs ) == '\t' )
-		file->x_curs = nexttab1();
-	 else
-		file->x_curs++;
-
-/*
-	 while (file->x_curs > _width) {
-		 file->cur_line->x -= _h_scroll;
-		 file->x_curs -= _h_scroll;
-		 need_reprint = 1;
-	 }
-	 file->offs++;
-*/
- }
-
-/*
- if(need_reprint == 1)
-   print_cur_line();
-*/
- moveyx(_wincur, file->x_curs);
- return 0;
-}
-
-
-int
-move_forward_one()
-{
- move_forward(1);
- return 0;
-}
-
-
-int
-move_forward_hs()
-{
- move_forward(10);
- return 0;
-}
-
-
-int
-move_backward1(int n)
-{
- int i, tmp;
- int need_reprint = 0;
-
- for( tmp = file->offs, i = 0; i < n && tmp != 0; tmp--, i++ )
-	;
- file->offs = 0;
- file->x_curs = 1;
-
-/* move forward */
- while( file->offs != tmp ) 
- if ( file->offs + 1 < file->cur_line->len ) { 
-	 if( *(file->cur_line->str + file->offs + 0) == '\t' ) {
-		file->x_curs = nexttab1();
-	 }
-	 else
-		file->x_curs++;
-
-	 while (file->x_curs > _width) {
-//		 file->cur_line->x -= _h_scroll;
-		 file->x_curs -= _h_scroll;
-//		 need_reprint = 1;
-	 }
-	 file->offs++;
- }
-gmessage("left");
-message("\t\t");
-
-	 while (file->x_curs < 1 ) {
-gmessage("< 1");
-message("\t\t");
-		 file->cur_line->x += _h_scroll;
-		 file->x_curs += _h_scroll;
-		 need_reprint = 1;
-	 }
-
-// if(need_reprint == 1)
-   print_cur_line();
- moveyx(_wincur, file->x_curs);
- return 0;
-}
-
-
-int
-move_backward(int n)
-{
- int i, tmp = file->offs;
- for( i = 0; i < n && file->offs != 0; i++ ) {
-	move_first_col();
-	move_forward(--tmp);
- }
- return 0;
-}
-
-
-int
-move_backward_one()
-{
- move_backward(1);
- return 0;
-}
-
-
-int
-move_backward_hs()
-{
- move_backward(10);
- return 0;
-}
-
-
-int
-nexttab()
-{
- int i;
- int y, x;
- getpos(&y, &x);
- i = (x - 1) / _tabs * _tabs + _tabs + 1;
- return i;
-}
-
-
-int
-nexttab3(int x, int o)
-{
- int i;
- i = (x - 1) / _tabs * _tabs + _tabs + 1;
- return i + o;
-}
-
-
-int
-nexttab1()
-{
- return (file->x_curs + (file->cur_line->x - 1) - 1) / _tabs * _tabs + _tabs + 1
-		- (file->cur_line->x - 1);
-}
-
-
-int
-get_bow()
-{
- int i, tmp;
- char *str;
-
- str = file->cur_line->str;
- i = tmp = file->offs;
- for ( ; isalnum( str[i] ) && str[i] != 0; i++ );
- for ( ; !isalnum( str[i] ) && str[i] != 0; i++ );
-/*
- if ( isalnum( str[i] ) ) {
-	tmp = i;
-}
-*/
- return i;
-}
-
-
-int
-get_eow()
-{
- int i, tmp;
- char *str;
-
- str = file->cur_line->str;
- i = tmp = file->offs;
- for ( ; !isalnum( str[i] ) && str[i] != 0; i++ );
- for ( ; isalnum( str[i] ) && str[i] != 0; i++ );
-/*
- if ( !isalnum( str[i] ) && str[i] ) {
-	tmp = i;
-}
-*/
- return i;
-}
-
-
-int
-move_bow()
-{
- int i = 0;
- i = get_bow();
- move_first_col();
- move_forward(i);
-}
-
-
-int
-move_eow()
-{
- int i = 0;
- i = get_eow();
- move_first_col();
- move_forward(i);
-}
-
-
-int
 del_word()
 {
 
  int i, to;
 
- to = ( isalnum( *(file->cur_line->str + file->offs) ) ) ? get_eow() : get_bow();
+ to = ( isalnum( *(cur_str + offs) ) ) ? get_eow() : get_bow();
 
- del( &file->cur_line->str, file->offs + 1, to - (file->offs + 0) );
- file->cur_line->len = strlen(file->cur_line->str);
+ del( &cur_str, offs + 1, to - (offs + 0) );
+ file->cur_line->len = strlen(cur_str);
+ print_cur_line();
+
+return 0;
+}
+
+
+int
+del_long_word()
+{
+
+ int i, to;
+
+ to = ( isalnum(cur_str[offs]) || cur_str[offs] == '_') ? get_long_eow() : get_bow();
+
+ del( &cur_str, offs + 1, to - (offs + 0) );
+ file->cur_line->len = strlen(cur_str);
  print_cur_line();
 
 return 0;
@@ -1968,7 +2168,17 @@ int
 cmd_del_word()
 {
  del_word();
- if( *(file->cur_line->str + file->offs) == 0)
+ if( *(cur_str + offs) == 0)
+	move_backward(1);
+ return 0;
+}
+
+
+int
+cmd_del_long_word()
+{
+ del_long_word();
+ if( *(cur_str + offs) == 0)
 	move_backward(1);
  return 0;
 }
@@ -1977,7 +2187,7 @@ cmd_del_word()
 int
 del_endline()
 {
- del( &file->cur_line->str, file->offs + 1, strlen(file->cur_line->str) );
+ del( &cur_str, offs + 1 + 1, strlen(cur_str) );
  print_cur_line();
  return 0;
 }
@@ -1987,7 +2197,7 @@ int
 cmd_del_endline()
 {
  del_endline();
- if( *(file->cur_line->str + file->offs) == 0)
+ if( *(cur_str + offs) == 0)
 	move_backward(1);
  return 0;
 }
@@ -1998,7 +2208,17 @@ cmd_change_word()
 {
  del_word();
  insert_string();
- if( *(file->cur_line->str + file->offs) == 0)
+ if( *(cur_str + offs) == 0)
+	move_backward(1);
+ return 0;
+}
+
+int
+cmd_change_long_word()
+{
+ del_long_word();
+ insert_string();
+ if( *(cur_str + offs) == 0)
 	move_backward(1);
  return 0;
 }
@@ -2010,12 +2230,12 @@ print_top_line()
  int i;
  line_t* pr_line;
  pr_line = file->cur_line;
- for( i = 0; i < _wincur - _wintop; i++ ) {
+ for( i = 0; i < _wincur - _wintop; i++ ) 
+ {
 	if (pr_line->backw == NULL) return;
 	pr_line = pr_line->backw; 
  }
-// print_color_line(pr_line, _wintop);
- print_line_x_color(pr_line->x, _wintop, pr_line->str, pr_line->color);
+ output_line(pr_line, _wintop);
 }
 
 
@@ -2029,8 +2249,7 @@ print_bottom_line()
 	if (pr_line->forw == NULL) return;
 	pr_line = pr_line->forw; 
  }
-// print_color_line(pr_line, _winbot);
- print_line_x_color(pr_line->x, _winbot, pr_line->str, pr_line->color);
+ output_line(pr_line, _winbot);
 }
 
 
@@ -2043,7 +2262,8 @@ print_line(int line, char *str)
  moveyx(line, 1);
  write(1, "\033[2K", 4);
  int cur = 1;
- while(cur <= _width && str[i] != 0) {
+ while(cur <= trm_width && str[i] != 0) 
+ {
 	if (str[i] == '\t')
 	   cur = nexttab();
 	else {
@@ -2064,56 +2284,246 @@ message(msg);
 int
 print_line_x(int o, int line, char *str)
 {
- int i = 0;
- int y, x;
- int tmp;
+ int i = 0, j = 0;
+ int tmp = o;
+ int prev_o;
+ char* p = str;
  int ch_len; //mbrlen
- getpos(&y, &x);
+ int negative;
+ int positive;
+ 
+// getpos(&y, &x);
+ savecur();
  moveyx(line, 1);
  printf(CLL);
 
-/*
- moveyx(X_MODE_, 1);
- printf(CLL);
-*/
-
- tmp = o;
- while(o <= _width && str[i] != 0) {
-	   if (o > 0 )
-	   moveyx(line, o);
-
-/*
-	else
-	   moveyx(X_MODE_, _cols + o);
-*/
-
+ while ( o <= 0)
+ {
 	if (str[i] == '\t')
-	   o = nexttab3( o - (tmp-1), tmp - 1);
- 	else {
-	   if (o > 0 )
+		o = nexttab3( o - (tmp-1), tmp - 1);
+	else
+		o++;
+	i++;
+	
+ }
+ prev_o = o;
+ p = str+i;
 
-	   ch_len = mbrlen(str+i, MB_CUR_MAX, NULL);
-//	   write(1, (str+i), ch_len);
-	   write(1, (str+i), 1);
+ while (o <= trm_width && str[i] != 0) 
+ {
+	if (str[i] == '\t') 
+	{
+	   prev_o = o;
+	   o = nexttab3( o - (tmp-1), tmp - 1);
+	   
+	   while(*p == '\t')
+		   p++;
+		   
+	   if (j)
+	   {
+   			moveyx(line, prev_o - j);
+   			
+	   		write(1, p, j);
+/*
+	   		sprintf(msg, "o:%d prev_o:%d", o, prev_o);
+	   		message(msg);
+*/
+	   		j = 0;
+	   		p = str + i + 1;
+	   		prev_o = o;
+	   }
+	} 
+	else 
+ 	{
+	   j++;
 	   o++;
 	}
-	i += ch_len;
+	i++;
  }
- moveyx(y, x);
+/*
+ fprintf(erlog, "\no:%d prev_o:%d j:%d p-str:%d\n", o, prev_o, j, p-str); 
+*/
+ if (j)
+ {
+ 	 moveyx(line, o - j);
+ 	 write(1, p, j);
+ } 
+/*
+ sprintf(msg, "o:%d prev_o:%d", o, prev_o);
+ message(msg);
+*/
+ restcur();
+ return 0;
+}
+
+int
+print_line_x1(int o, int line, char *str)
+{
+ int i = 0, j = 0;
+ int tmp = o;
+ int prev_o;
+ char* p = str;
+ int ch_len; //mbrlen
+ int negative;
+ int positive;
+ 
+// getpos(&y, &x);
+// savecur();
+ moveyx(line, 1);
+ printf(CLL);
+
+ while ( o <= 0)
+ {
+	if (str[i] == '\t')
+		o = nexttab3( o - (tmp-1), tmp - 1);
+	else
+		o++;
+	i++;
+	
+ }
+ prev_o = o;
+ p = str+i;
+
+ while (o <= trm_width && str[i] != 0) 
+ {
+	if (str[i] == '\t') 
+	{
+	   prev_o = o;
+	   o = nexttab3( o - (tmp-1), tmp - 1);
+	   
+	   while(*p == '\t')
+		   p++;
+		   
+	   if (j)
+	   {
+   			moveyx(line, prev_o - j);
+   			
+	   		write(1, p, j);
+/*
+	   		sprintf(msg, "o:%d prev_o:%d", o, prev_o);
+	   		message(msg);
+*/
+	   		j = 0;
+	   		p = str + i + 1;
+	   		prev_o = o;
+	   }
+	} 
+	else 
+ 	{
+	   j++;
+	   o++;
+	}
+	i++;
+ }
+/*
+ fprintf(erlog, "\no:%d prev_o:%d j:%d p-str:%d\n", o, prev_o, j, p-str); 
+*/
+ if (j)
+ {
+ 	 moveyx(line, o - j);
+ 	 write(1, p, j);
+ } 
+/*
+ sprintf(msg, "o:%d prev_o:%d", o, prev_o);
+ message(msg);
+*/
+// restcur();
+ return 0;
+}
+
+
+int
+deb_print_line_x(int o, int line, char *str)
+{
+ int i = 0, j = 0;
+ int tmp = o;
+ int prev_o;
+ char* p = str;
+ int ch_len; //mbrlen
+ int negative;
+ int positive;
+ 
+// getpos(&y, &x);
+/*
+ savecur();
+ moveyx(line, 1);
+ move(line-1, 0);
+*/
+ return 0;
+ printf(CLL);
+
+ while ( o <= 0)
+ {
+	if (str[i] == '\t')
+		o = nexttab3( o - (tmp-1), tmp - 1);
+	else
+		o++;
+	i++;
+	
+ }
+ prev_o = o;
+ p = str+i;
+
+ while (o <= trm_width && str[i] != 0) 
+ {
+	if (str[i] == '\t') 
+	{
+	   prev_o = o;
+	   o = nexttab3( o - (tmp-1), tmp - 1);
+	   
+	   while(*p == '\t')
+		   p++;
+		   
+	   if (j)
+	   {
+   			moveyx(line, prev_o - j);
+   			
+	   		write(1, p, j);
+/*
+	   		sprintf(msg, "o:%d prev_o:%d", o, prev_o);
+	   		message(msg);
+*/
+	   		j = 0;
+	   		p = str + i + 1;
+	   		prev_o = o;
+	   }
+	} 
+	else 
+ 	{
+	   j++;
+	   o++;
+	}
+	i++;
+ }
+/*
+ fprintf(erlog, "\no:%d prev_o:%d j:%d p-str:%d\n", o, prev_o, j, p-str); 
+*/
+ if (j)
+ {
+ 	 moveyx(line, o - j);
+ 	 write(1, p, j);
+ } 
+/*
+ sprintf(msg, "o:%d prev_o:%d", o, prev_o);
+ message(msg);
+*/
+ restcur();
+ return 0;
 }
 
 
 int
 print_line_x_color(int o, int line, char *str, int col)
 {
+ assert(str);
  int i = 0;
 // int y, x;
  int tmp;
 // getpos(&y, &x);
- save_cur();
+ savecur();
  moveyx(line, 1);
  printf(CLL);
- printf("\x1B[%dm", col); /* escape codes */
+ color(col);
 
 
 /*
@@ -2123,14 +2533,14 @@ print_line_x_color(int o, int line, char *str, int col)
 
 
  tmp = o;
- while(o <= _width && str[i] != 0) {
+ while(o <= trm_width && str[i] != 0) {
 	if (o > 0 )
 	   moveyx(line, o);
 
 
 /*
 	else
-	   moveyx(X_MODE_, _cols + o);
+	   moveyx(X_MODE_, trm_cols + o);
 */
 
 
@@ -2139,7 +2549,8 @@ print_line_x_color(int o, int line, char *str, int col)
 	else {
 		if (o > 0 )
 		{
-	 		write(1, (str+i), 1);
+//	 		write(1, (str+i), 1);
+	 		putchar(str[i]);
 /*
 			sprintf(msg, "%d - %c", *(str+i+1), *(str+i+1));
 			gmessage(msg);
@@ -2158,7 +2569,7 @@ print_line_x_color(int o, int line, char *str, int col)
 */
  }
 // moveyx(y, x);
- rest_cur();
+ restcur();
 /*
  sprintf(msg, "y: %d - x: %d", y, x);
  gmessage(msg);
@@ -2166,11 +2577,21 @@ print_line_x_color(int o, int line, char *str, int col)
  printf("\x1B[0m"); /* escape codes */
 }
 
+int
+output_line(line_t* l, int line_n)
+{
+ print_line_x(l->x, line_n, l->str);
+/*
+ print_line_x1(l->x, line_n, l->str);
+ print_line_x_color(l->x, line_n, l->str, l->color);
+*/
+ return 0;
+}
 
 int
 print_color_line(line_t* l, int pos)
 {
-// print_line_x_color(l->x, pos, l->str, l->color);
+ output_line(l, pos);
  return 0;
 }
 
@@ -2179,10 +2600,12 @@ int
 print_cur_line()
 {
 
- print_line_x_color(file->cur_line->x, _wincur, file->cur_line->str,
+/*
+ output_line(file->cur_line->x, _wincur, cur_str,
 			file->cur_line->color);
+*/
 
-// print_color_line(file->cur_line, _wincur);
+ output_line(file->cur_line, _wincur);
  return 0;
 }
 
@@ -2193,13 +2616,28 @@ redraw_screen()
  int i, n;
  line_t* ln;
 
+/*
+ moveyx(dwin_top, 1);
+ clear_up();
+*/
  clear_all();
+ color(NRM);
+
+ if (set_show_buffers)
+	show_buffers();
+ 
+ renumber_all();
+ show_bar(SH_ALL);
+ 
+ msg_prior_level = 0;
 
  if (!file->cur_line)
  return 1;
+// printf("redraw_screen:debug\n"); exit(1);
 
+// debug(); 
  ln = file->cur_line;
- calculate_all_lengths();
+// calculate_all_lengths();
 
  for( n = _wincur; n > _wintop && ln->backw != NULL; ) {
 	ln = ln->backw;
@@ -2218,21 +2656,19 @@ redraw_screen()
 */
 /********		*/
 
-	print_line_x_color(ln->x, n+i, ln->str, ln->color);
-//	print_color_line(ln, n+i); /* seg fault*/
-sprintf(msg, "%d", n+i);
-//getchar();
-//gmessage(msg);
+		
+//	print_line_x_color(ln->x, n+i, ln->str, ln->color);
+	
+	output_line(ln, n+i); /* seg fault*/
 	ln = ln->forw;
-/*
-sprintf(msg, "%s", ln->str);
-gmessage(msg);
-*/
  }
- print_line_x_color(ln->x, n+i, ln->str, ln->color);
-// print_color_line(ln, n+i);
- moveyx(_wincur, file->x_curs);
+ output_line(ln, n+i);
+// output_line(ln->x, n+i, ln->str);
+// output_line(ln, n+i);
+ place_cursor();
+
 }
+
 
 char* 
 find_ss (char* s, char *t) {	//skip spaces
@@ -2333,98 +2769,18 @@ simple_find()
  file->cur_line = search_pos;
 
  redraw_screen();
- reset();
- message(search_pos->str);
+//gmessage("bubug");
+ reset_x();
+// message(search_pos->str);//bug!!!
  return 0;
 }
-
-
-#if 0
-/*
-int
-simple_find()
-{
- int i;
- char* res = NULL;
- line_t* search_pos;
-
- pfind = &simple_find;
-
- moveyx(_wincur, 1);
- if(file->cur_line->forw == NULL) return 1;
- search_pos = file->cur_line;
- while(search_pos != NULL) {
-//	res = strcasestr(search_pos->str, s_buf);
-	res = strstr(search_pos->str + file->offs + 1, s_buf);
-//	res = find_ss(s_buf, search_pos->str);
-
-	if ( res == NULL )
-		search_pos = search_pos->forw;
- }
-	if (res == NULL) {
-		message("no matching");
-		return 1;
- }
- file->cur_line = search_pos;
-
- redraw_screen();
- reset();
-	move_first_col();
-	move_forward(res - file->cur_line->str+0);	
-
-// message(search_pos->str);
-//	gmessage(msg);
- sprintf(msg, "%d\n", res-search_pos->str);
-
- return 0;
-}
-
-*/
-
-
-/*
-int
-simple_find()
-{
- if (file->cur_line == NULL)
-	return 0;
-
- int len = strlen(s_buf);
- line_t *line = file->cur_line;
- int o = file->offs;
- char *pos;
-
- pfind = &simple_find;
-
- if( len )
- for ( ; line != NULL; line = line->forw, o = -1)
- for (pos = line->str + o + 1; pos = find_ss (pos, s_buf); pos += len) {
-
-
-//	if ((isalnum (pos[-1]) && pos != line->str) || isalnum (pos[len])
-//	|| (pos[-1] == '_' && pos != line->str) || pos[len] == '_')
-//		continue;
-		
-		
-	file->cur_line = line;
-
-	redraw_screen();
-	move_first_col();
-	move_forward(pos - line->str);	
-	message(msg);
-
-	return 0;
- }
- return 0;
-}
-*/
-#endif
 
 
 int
 cmd_simple_find()
 {
- getstring(s_buf, "Find:");
+ if (getstring(s_buf, "Find:") == 27)
+ 	return 27;
 // if (s_buf[0])
 // move_first_line();
  simple_find();
@@ -2440,7 +2796,7 @@ find_name()
 
  int len = strlen(s_buf);
  line_t *line = file->cur_line;
- int o = file->offs;
+ int o = offs;
  char *pos;
 
  pfind = &find_name;
@@ -2468,7 +2824,8 @@ find_name()
 int
 cmd_find_name()
 {
- getstring(s_buf, "Find:");
+ if (getstring(s_buf, "Find:") == 27)
+ 	return 1;
  find_name();
  return 0;
 }
@@ -2499,7 +2856,7 @@ find_beginning()
  file->cur_line = search_pos;
 
  redraw_screen();
- reset();
+ reset_x();
  message(search_pos->str);
  return res;
 }
@@ -2508,7 +2865,8 @@ find_beginning()
 int
 cmd_find_beginning()
 {
- getstring(s_buf, "Find:");
+ if (getstring(s_buf, "Find:") == 27)
+ 	return 1;
  if (s_buf[0])
 	move_first_line();
 
@@ -2582,21 +2940,30 @@ search_and_replace(line_t* start_srch, line_t* end_srch, int name)
 int
 cmd_replace_whole()
 {
- getstring(s_buf, "Search:");
- getstring(r_buf, "Replace:");
+ if (getstring(s_buf, "Search:") == 27)
+ 	return 1;
+ if (getstring(r_buf, "Replace:") == 27)
+ 	return 1;
+/*
+priv(s_buf, s); getchar();
+priv(r_buf, s); getchar();
+*/
 
  search_and_replace (get_head(), get_tail(), 0);
  redraw_screen();
  return 0;
 }
 
+
 int
 cmd_replace_global()
 {
  buffer_t *tmp = file; 
  message("GLOBAL replace");
- getstring(s_buf, "Search:");
- getstring(r_buf, "Replace:");
+ if (getstring(s_buf, "Search:") == 27)
+ 	return 1;
+ if (getstring(r_buf, "Replace:") == 27)
+ 	return 1;
  for(file = file; file->prev; file = file->prev);
  for(;file; file = file->next) {
 	if (file->cur_line == NULL) continue;
@@ -2607,13 +2974,16 @@ cmd_replace_global()
  return 0;
 }
 
+
 int
 cmd_rename_global()
 {
  buffer_t *tmp = file; 
  message("GLOBAL replace name");
- getstring(s_buf, "Search:");
- getstring(r_buf, "Replace:");
+ if (getstring(s_buf, "Search:") == 27)
+ 	return 1;
+ if (getstring(r_buf, "Replace:") == 27)
+ 	return 1;
  for(file = file; file->prev; file = file->prev);
  for(;file; file = file->next) {
 	if (file->cur_line == NULL) continue;
@@ -2628,8 +2998,11 @@ cmd_rename_global()
 int
 cmd_replace_marks()
 {
- getstring(s_buf, "Search:");
- getstring(r_buf, "Replace:");
+ if (getstring(s_buf, "Search:") == 27)
+ 	return 1;
+ if (getstring(r_buf, "Replace:") == 27)
+ 	return 1;
+ 	
  search_and_replace (file->copy_start_pos, file->copy_end_pos, 0);
  redraw_screen();
  return 0;
@@ -2639,8 +3012,10 @@ cmd_replace_marks()
 int
 cmd_rename_whole()
 {
- getstring(s_buf, "Search:");
- getstring(r_buf, "Replace:");
+ if (getstring(s_buf, "Search:") == 27)
+ 	return 1;
+ if (getstring(r_buf, "Replace:") == 27)
+ 	return 1;
 
  search_and_replace (get_head(), get_tail(), 1);
  redraw_screen();
@@ -2651,8 +3026,10 @@ cmd_rename_whole()
 int
 cmd_rename_marks()
 {
- getstring(s_buf, "Search:");
- getstring(r_buf, "Replace:");
+ if (getstring(s_buf, "Search:") == 27)
+ 	return 1;
+ if (getstring(r_buf, "Replace:") == 27)
+ 	return 1;
  search_and_replace (file->copy_start_pos, file->copy_end_pos, 1);
  redraw_screen();
  return 0;
@@ -2699,6 +3076,11 @@ int
 copy_lines(line_t *start, line_t *end, line_t **buf_head, line_t **buf_tail)
 {
 
+/*
+dpriv(start->str, s);
+dpriv(end->str, s);
+*/
+ int i = 0;
  line_t *source = start;
  line_t *dest = NULL;
 
@@ -2720,6 +3102,7 @@ copy_lines(line_t *start, line_t *end, line_t **buf_head, line_t **buf_tail)
 	dest->x = source->x;
 	dest->color = 0;
 	source = source->forw;
+//	dpriv(i++, d);
  }
  *buf_tail = dest;
  return 0;
@@ -2729,7 +3112,6 @@ copy_lines(line_t *start, line_t *end, line_t **buf_head, line_t **buf_tail)
 int
 insert_lines(line_t *place, line_t *buf_head, line_t *buf_tail)
 {
-// if (!place) insert_lines_before(get_head(), buf_head, buf_tail);//bad recursion
  if( !place || !buf_head || !buf_tail ) return 1;
 
  line_t *tmp;
@@ -2738,7 +3120,7 @@ insert_lines(line_t *place, line_t *buf_head, line_t *buf_tail)
  buf_head->backw = place;
  place->forw = buf_head;
  if(tmp)
- tmp->backw = buf_tail;
+	 tmp->backw = buf_tail;
  buf_tail->forw = tmp;
  return 0;
 }
@@ -2747,7 +3129,6 @@ insert_lines(line_t *place, line_t *buf_head, line_t *buf_tail)
 int
 insert_lines_before(line_t *place, line_t *buf_head, line_t *buf_tail)
 {
-// if (!place) insert_lines(get_tail(), buf_head, buf_tail);//bad recursion
  if( !place || !buf_head || !buf_tail ) return 1;
 
  line_t *tmp;
@@ -3089,10 +3470,11 @@ arrange_markers(line_t** m1, line_t** m2)
 
 
 int
-cmd_yank()
+yank()
 {
- free_lines( copy_buffer_head, NULL);
-//here
+ if (copy_buffer_head)
+	 free_lines( copy_buffer_head, NULL);
+ 
  copy_buffer_head = NULL;
  copy_buffer_tail = NULL;
 
@@ -3111,7 +3493,6 @@ cmd_paste()
  insert_lines( file->cur_line,  start_ins, end_ins);
  if (file->cur_line == NULL)
 	file->cur_line = start_ins;
- message(CLL"insert line done");
  redraw_screen();
  return 0;
 }
@@ -3126,90 +3507,43 @@ cmd_paste_before()
  insert_lines_before( file->cur_line,  start_ins, end_ins);
  if (file->cur_line == NULL)
 	file->cur_line = start_ins;
- message(CLL"insert line done");
  redraw_screen();
  return 0;
 }
 
 
-/*
 int
-delete(line_t *l, line_t *m)
+delete_lines(line_t *l, line_t *m)
 {
  line_t *prev, *next;
 
- if(l)
- prev = l->backw;
- if(m)
- next = m->forw;
+ if(l) prev = l->backw;
+ 
+ if(m) next = m->forw;
 
-
- free_lines(l, m);//seg fault
- if(prev)
- prev->forw = next;
- if(next)
- next->backw = prev;
+ if(prev) prev->forw = next;
+ 
+ if(next) next->backw = prev;
+ 
+ free_lines(l, m);
 
  return 0;
 }
-*/
 
-int
-delete(line_t *l, line_t *m)
-{
- if (l == NULL)
-	l = get_head();
- else
-	l = l->forw;
-
- if (m == NULL)
-	m = get_tail();
- else
-	m = m->backw;
-
- line_t *prev, *next;
-
- prev = l->backw;
- next = m->forw;
-
- free_lines(l, m);//seg fault
- if(prev)
- prev->forw = next;
- if(next)
- next->backw = prev;
-
- return 0;
-}
 
 int
 del_lines(line_t *l, line_t *m)
 {
- if(!l || !m) return 1;
-/*
- line_t *l = file->copy_start_pos;
- line_t *m = file->copy_end_pos;
-*/
- line_t *prev, *next;
-
- if(l)
- prev = l->backw;
- if(m)
- next = m->forw;
-
  assert(l != NULL && m != NULL);
+ 
+ if(!l || !m) return 1;
+ 
+ yank();
 
- cmd_yank();
-
- free_lines(l, m);
- if(prev)
- prev->forw = next;
- if(next)
- next->backw = prev;
-
- if(next)
- file->cur_line = next;
- else
- file->cur_line = prev;
+ cl = (m->forw) ? m->forw : l->backw;
+ 
+ delete_lines(l, m);
+ 
  redraw_screen();
  return 0;
 }
@@ -3218,8 +3552,6 @@ del_lines(line_t *l, line_t *m)
 int
 cmd_del_block()
 {
- if (!file->cur_line)
-	return 1;
  del_lines(file->copy_start_pos, file->copy_end_pos);
  return 0;
 }
@@ -3228,8 +3560,6 @@ cmd_del_block()
 int
 cmd_del_line()
 {
-
-
  file->copy_start_pos = file->cur_line;
  file->copy_end_pos = file->cur_line;
 
@@ -3240,38 +3570,43 @@ cmd_del_line()
 }
 
 
-int 
-free_lines(line_t *l, line_t *m)
+int
+free_line(line_t *l)
 {
-sprintf(msg, "%p, %p", l, m);
-
- if(!l)	return 0;
-
- line_t *next;
- while( l != NULL && l != m ) {
-	next = l->forw;
-	free( l->str );
-	free( l );
-	l = next;
- }
+ if (!l) return 0;
+ 
+ free( l->str );
+ free( l );
  return 0;
 }
 
-#if 0
 int 
 free_lines(line_t *l, line_t *m)
 {
+// if(!l)	return 0;
+
  line_t *next;
- while( l != NULL && l != m ) {
+ while( l != NULL && l != m) {
 	next = l->forw;
-	free( l->str );
-	free( l );
+	free_line(l);
 	l = next;
+//	dpriv(next, p);
  }
+ free_line(l);
  return 0;
 }
-#endif
 
+
+
+int
+renumber_all()
+{
+ int i;
+ line_t* l = get_head();
+ for (i = 1; l; i++, l = l->forw)
+	l->no = i;
+ return 0;
+}
 
 int
 cur_line_number()
@@ -3280,16 +3615,16 @@ cur_line_number()
  if( !file->cur_line )
    return 0;
 
-
  int i;
  line_t *line;
 
- line = get_head();
- for(i = 1; line != file->cur_line; i++) {
-   line = line->forw;
+ line = cl; 
+ for(i = 1; line->backw != NULL; i++) {
+   line = line->backw;
  }
  return i;
 }
+
 
 int
 set_cur_line(int n)
@@ -3314,43 +3649,48 @@ set_cur_line(int n)
 line_t*
 get_head()
 {
- line_t *line = file->cur_line;
+ line_t *l = file->cur_line;
 
- if (!line) return line;
+ if (!l) return NULL;
 
- while( line->backw != NULL )
-	line = line->backw;
- return line;
+ while( l->backw != NULL )
+ {
+	l = l->backw;
+ }
+ return l;
 }
 
 
 line_t*
 get_tail(){
- line_t *line = file->cur_line;
+ line_t *l = file->cur_line;
 
- if (!line) return line;
+ if (!l) return l;
 
- while( line->forw != NULL )
-	line = line->forw;
- return line;
+ while( l->forw != NULL )
+ {
+	l = l->forw;
+ }
+ return l;
 }
 
 
 int 
-show_bar()
+show_bar1(int elem)
 {
+#ifndef NO_SHOW_BAR
  if(!file->cur_line) return 1;
 
  int line_no = cur_line_number();
 
  int y, x;
  int i;
+ static char buf[200];
  getpos(&y, &x);
- moveyx(_rows-1, 1);
-
+ moveyx(trm_rows-1, 1);
  printf(CLL);
  printf("cursor: %d, %d\tx_curs: %d\t", x, y, file->x_curs);
- printf("%1$d %2$x %2$c", file->offs, *(file->cur_line->str + file->offs) );
+ printf("%1$d %2$x %2$c", offs, *(cur_str + offs) );
  printf("   x: %d", file->cur_line->x);
 
 /* bits */
@@ -3362,46 +3702,133 @@ show_bar()
 	 bits[i] = (tmp_mask & 1) + '0';
 	 tmp_mask = tmp_mask >> 1;
  }
- moveyx(_rows-1, 50);
- printf("cmd_mask: %s", bits);
+ moveyx(trm_rows-1, 50);
+    printf("cmd_mask: %s", bits);
  if (global) printf("   GLOBAL");
 
- moveyx(_rows, 1);
+ moveyx(trm_rows, 1);
  printf(CLL);
- moveyx(_rows, 55);
-// sprintf(msg, "%x, %d", com_key, key_pressed[com_key] + key_stat[com_key]);
- printf( "    %s", msg);
- moveyx(_rows, 40);
+ moveyx(trm_rows, 67);
+ sprintf(buf, "_wintop:%d", _wintop);
+ printf("%s", buf);
+ moveyx(trm_rows, 50);
+ sprintf(msg, "%x, %d", com_key, key_pressed[com_key] + key_stat[com_key]);
+ printf( "    %s", msg);//msg - ?
+ moveyx(trm_rows, 40);
  printf("%s", file->filename);
- moveyx(_rows, 20);
+ moveyx(trm_rows, 20);
  printf("alt: ");
- if( _key_mode == 0 )
- 	printf("OFF");
- else
- 	printf("ON");
- moveyx(_rows, 1);
+ printf("%s", (cmd_mask & ALT_FLAG) == ALT_FLAG ? "ON" : "OFF");
+ moveyx(trm_rows, 1);
  printf("line: %d", line_no);
  moveyx(y, x);
+#endif
+ return 0;
+}
+
+int 
+show_bar(int elem)
+{
+#ifndef NO_SHOW_BAR
+
+ int line_no = cur_line_number();
+ static char buf[200];
+ savecur();
+ 
+/*
+ moveyx(trm_rows-1, 1);
+ printf(CLL);
+ printf("cursor: %d, %d\tx_curs: %d\t", x, y, file->x_curs);
+ printf("%1$d %2$x %2$c", offs, *(cur_str + offs) );
+ printf("   x: %d", file->cur_line->x);
+*/
+ 
+ if ((elem & SH_MASK) == SH_MASK);
+ {
+/*
+	moveyx(trm_rows-1, 1);
+	printf(CLL);
+	moveyx(trm_rows, 1);
+	printf(CLL);
+*/
+	moveyx(trm_rows, 15);
+	printf("alt: ");
+	moveyx(trm_rows, 1);
+	printf("line:");
+ }
+ 
+ if ((elem & SH_LINE) == SH_LINE)
+ {
+	moveyx(trm_rows, 7);
+	printf("      ");
+	moveyx(trm_rows, 7);
+	if (cl) printf("%d", cl->no);
+ }
+ 
+ if ((elem & SH_FLAG) == SH_FLAG)
+ {
+	moveyx(trm_rows, 20); 
+	printf("      ");
+	moveyx(trm_rows, 20); 
+	printf("%s", (cmd_mask & ALT_FLAG) == ALT_FLAG ? "ON" : "OFF");
+ }
+ 
+ if ((elem & SH_FNAME) == SH_FNAME)
+ {
+	moveyx(trm_rows, 30);
+	printf(CLR);
+	printf("%s", file->filename);
+ }
+ restcur();
+#endif
  return 0;
 }
 
 
 int
 show_buffers() {
- int i;
+ int i = 0, j;
  buffer_t *tmp;
  char buf[MAX_LINE]={0};
  
  tmp = file;
- for (;tmp->prev; tmp=tmp->prev);
- for (;tmp; tmp = tmp->next) {
-	strcat(buf, tmp->filename);
-	strcat(buf, " ");
+ for (;tmp->prev; tmp = tmp->prev);
+ for (j = 0; tmp; tmp = tmp->next, j++)
+ {
+	if (tmp == file) 
+ 		i += sprintf(buf + i, "[%d]%s ", j + 1, tmp->filename);
+ 	else
+ 		i += sprintf(buf + i, "(%d)%s ", j + 1, tmp->filename);
  }
- message(buf);
+// message(buf);
+ print_line_x(1, 1, buf);
  return 0;
 }
 
+int
+show_hide_buffers()
+{
+ if (set_show_buffers)
+ {
+	_wintop--;
+	message("");
+	set_show_buffers = 0;
+ }
+ else
+ {
+// 	gmessage("else(set_sh.. == 0");
+	_wintop++;
+/*
+	sprintf(msg, "_wintop:%d", _wintop);
+	gmessage(msg);
+*/
+	show_buffers();
+	set_show_buffers = 1;
+ }
+ resize();
+ redraw_screen();
+ return 0;
+}
 
 line_t*
 goto_line( int n )
@@ -3419,22 +3846,17 @@ goto_line( int n )
 int
 cmd_goto_line()
 {
- if(!file->cur_line) return 1;
-
  char buf[MAX_LINE];
  int n;
  line_t *line;
- save_cur();
- moveyx(_winbot + 1, 1);
- printf(CLL);
- readstring(buf, MAX_LINE);
- rest_cur();
+ 
+ if (getstring(buf, "") == 27) return 1;
  n = atoi(buf);
  if( (line = goto_line( n ) )) {
 	file->cur_line = line;
 	redraw_screen();
  }
- reset();
+ reset_x();
  return 0;
 }
 
@@ -3442,8 +3864,8 @@ cmd_goto_line()
 void 
 sigsegv_handler(int i)
 {
- sig_handler();
- printf("SIGSEGV\n");
+// sig_handler();
+ fprintf(stderr, "SIGSEGV\n");
  abort();
 }
 
@@ -3465,23 +3887,63 @@ cmd_quit()
 
 
 void
+debug_exit()
+{
+ set_raw_mode(OFF);
+}
+
+void
 sig_handler()
 {
  int i, y, x;
  write_key_pressed();
  freecommands();
  freecommands_str();
+ 
  getpos(&y, &x);
- set_scroll_win(1, _rows);
+ set_scroll_win(1, trm_rows);
  _wintop = 1;
- _winbot = _rows;
- moveyx(y, x);
- for(i = 0; i < _rows - y + 2; i++)
+ _winbot = trm_rows;
+// moveyx(y, x);
+
+/*
+ for(i = 0; i < trm_rows - y - 2; i++)
  	scroll_up();
- setecho();
- setcanon();
+*/
+ 	
+ clear_down();
+ set_raw_mode(OFF);
  fclose(erlog);
- printf("sig_handler()\n");
+}
+
+
+void
+sig_tstop()
+{
+ clear_all();
+ set_scroll_win(1, trm_rows);
+ _wintop = 1;
+ _winbot = trm_rows;
+ set_raw_mode(OFF);
+ signal(SIGTSTP, SIG_DFL);
+ raise(SIGTSTP);
+}
+
+
+void
+sig_cont()
+{
+/*
+ dprint("sig_cont\n");
+ exit(1);
+*/
+ resize();
+ set_raw_mode(ON);
+ redraw_screen();
+ signal(SIGTSTP, sig_tstop);
+/*
+ signal(SIGTSTP, sig_tstop);
+*/
 }
 
 
@@ -3527,6 +3989,7 @@ file_buffer_go(int n) {
 	last_file = tmp_last_file;
  }
  redraw_screen();
+ 
  return 0;
 }
 
@@ -3709,17 +4172,68 @@ cmd_change_color()
  return 0;
 }
 
+int
+change_color_mode(int col)
+{
+ int i;
+ line_t *m1, *m2;
+
+ color(col);
+ 
+// redraw_screen();
+ return 0;
+}
+
+int
+cmd_change_color_mode()
+{
+	char ch_col_ch = getchar();
+	switch (ch_col_ch) {
+	case '0':
+		change_color_mode(0);
+		break;
+	case '1':
+		change_color_mode(31);
+		break;
+	case '2':
+		change_color_mode(32);
+		break;
+	case '3':
+		change_color_mode(33);
+		break;
+	case '4':
+		change_color_mode(34);
+		break;
+	case '5':
+		change_color_mode(35);
+		break;
+	case '6':
+		change_color_mode(36);
+		break;
+	case '7':
+		change_color_mode(37);
+		break;
+	default:
+		break;
+	}
+ return 0;
+}
+
 
 int
 cmd_dead_key_pressed()
 {
  cmd_mask = ~cmd_mask;
+ show_bar(SH_FLAG);
  _switch_key_mode = (_switch_key_mode) ? 0 : 1;
+/*
  sprintf(msg, "%d", cmd_mask); message(msg);
  sprintf(msg, "_switch...: %d", _switch_key_mode); message(msg);
+*/
  need_goto = 1;
  return 0;
 }
+
 
 int
 cmd_open(int argn, char** argv)
@@ -3750,9 +4264,36 @@ cmd_open(int argn, char** argv)
  else
 	i = 1;
  for( ; i < argn; i++)
+ {
  	open_file(argv[i]);
+ }
 
 	create_f = 0;
+
+ redraw_screen();
+ 
+ return 0;
+}
+
+
+int
+cmd_create(int argn, char** argv)
+{
+ if (argn == 1)
+	return 0;
+
+ create_f = 1;
+ 
+ int i;
+ buffer_t *tmp;
+
+ last_file = file;
+
+ i = 1;
+ for( ; i < argn; i++)
+ 	open_file(argv[i]);
+
+ create_f = 0;
 
  redraw_screen();
  return 0;
@@ -3775,6 +4316,7 @@ cmd_rename(int argn, char** argv)
  return 0;
 }
 
+
 int
 set_jump(int argn, char** argv)
 {
@@ -3790,6 +4332,7 @@ set_jump(int argn, char** argv)
  return 0;
 }
 
+
 int
 cmd_set_autoindent()
 {
@@ -3799,12 +4342,14 @@ cmd_set_autoindent()
  return 0;
 }
 
+
 int
 set_autoindent(int argc, char** argv)
 {
  if (argc != 1) return 1;
  cmd_set_autoindent();
 }
+
 
 int
 indent_cur_line()
@@ -3814,22 +4359,553 @@ indent_cur_line()
  int i;
 
  for (i = 0; isspace(file->cur_line->backw->str); i++);
- file->cur_line->str = malloc(i + 1);
- file->cur_line->str[i] = '\0';
- strncpy(file->cur_line->str, file->cur_line->backw->str, i);
+ cur_str = malloc(i + 1);
+ cur_str[i] = '\0';
+ strncpy(cur_str, file->cur_line->backw->str, i);
 // move_forwart(i);
 // cmd_edit_line_end()
 
  return 0;
 }
 
+
 int
 cur_len() {
- return strlen(file->cur_line->str);
+ return strlen(cur_str);
+}
+
+
+int
+do_command(int once) {
+ char buf[MAX_LINE]={0};
+
+ do {
+	 if (getstring(buf, "Command:") == 27)
+	 	continue;
+	 	
+	 if (strcmp(buf, "return") == 0 || strcmp(buf, "r") == 0)
+	 	break;
+	 
+	 if (buf[0])
+	 	strcpy(invoke_buf, buf);
+	 	
+	 command(invoke_buf);
+ } while (!once);
+ 	
+ return 0;
 }
 
 int
-test() {
- fmessage("%d", cur_len());
+invoke_command()
+{
+ return do_command(1);
+}
+
+
+int
+command_mode()
+{
+ return do_command(0);
+}
+
+
+#if 0
+int
+exec_shell(char* comm) {
+ clear_all();
+ moveyx(1, 1);
+ set_scroll_win(1, trm_rows);
+ setecho();
+ system(comm);
+ printf("\n[PRESS ANY KEY]");
+ getchar();
+ set_scroll_win(_wintop, _winbot);
+ redraw_screen();
+ setnoecho();
+ resize();
+ return 0;
+}
+#endif
+
+
+int
+do_shell_command (int once, char* str) 
+{
+ char buf[MAX_LINE]={0};
+ int need_init=1;
+
+ do {
+	 if (!str)
+	 {
+		 if (getstring(buf, "Execute:") == 27)
+		 {
+		 	if (once) return 0;
+			else continue;
+		 }
+	 }
+	 else
+	 	strcpy(buf, str);
+	 	
+ 	 if (need_init) {
+		 clear_all();
+		 moveyx(1, 1);
+		 set_scroll_win(1, trm_rows);
+/*
+		 setecho();
+*/
+		 set_raw_mode(OFF);
+		 need_init = 0;
+	 }
+	 	
+	 if (strcmp(buf, "return") == 0 || strcmp(buf, "r") == 0)
+	 	break;
+	 
+	 if (buf[0])
+	 	strcpy(invoke_buf, buf);
+	 	
+	 system(invoke_buf);
+ } while (!once);
+ 
+ set_raw_mode(ON);
+ if (once)
+ {
+ 	 printf("\n[PRESS ANY KEY]");
+	 getchar();
+ }
+ set_scroll_win(_wintop, _winbot);
+ redraw_screen();
+ set_raw_mode(ON);
+ resize();
+ return 0;
+}
+
+int
+invoke_shell_command()
+{
+ return do_shell_command(1, NULL);
+}
+
+int
+shell_command_mode()
+{
+ return do_shell_command(0, NULL);
+}
+
+
+int
+get_compile_and_run_string()
+{
+ if (getstring(compile_and_run_buf, "Execute commands:") == 27)
+	return 1;
+}
+
+
+int
+make_run() {
+ do_shell_command (1, compile_and_run_buf);
+ return 0;
+}
+
+int
+read_sequence()
+{
+ int i;
+ char c;
+ char term = com_key;
+ 
+ savecur();
+ moveyx(trm_rows-1, 1);
+ printf(CLL"%s", "Enter sequence:");
+ 
+ for (i = 1; i < MAX_SEQ - 1; i++)
+ {
+	c = getchar();
+	
+	if (c == term)
+	{
+		seq[i] = 0;
+		break;
+	}
+	
+	if (iscntrl(c))
+	{
+		printf("^%c", c + 64);
+		seq[i] = c;
+	}
+	else
+	if (isprint(c))
+	{
+		putchar(c);
+		seq[i] = c;
+	}
+//seq[i] = c;
+ }
+ dpriv(i, d);
+ seq_len = i - 1;
+ restcur();
+ return 0;
+}
+
+int
+send_sequence()
+{
+ int i;
+ 
+ uint32_t tmp = cmd_mask;
+ cmd_mask = 0;
+ 
+/*
+ printf("\nseq[0]:%d     \n", seq[0]);
+ getchar();
+ exit(1);
+*/
+  
+ for (i = seq_len; i; i--)
+	ungetc(seq[i], stdin);
+ 
+ cmd_mask = tmp; 
+ return 0;
+}
+
+int
+isalnum_(char c) {
+ if (isalnum(c) || c == '_')
+	return 1;
+ else
+	return 0;
+}
+
+int
+isspace_(char c) {
+ if (isspace(c) && c != '\n')
+ 	return 1;
+ else
+ 	return 0;
+}
+
+int
+read_enfr_str()
+{
+ if (getstring(enframe_top, "Top frame:") == 27) return 1;
+ if (getstring(enframe_bot, "Bottom frame:") == 27) return 1;
+ return 0;
+}
+
+int
+enframe (char* top, char* bot)
+{
+ line_t* l;
+ 
+ l = make_line_before(file->copy_start_pos);
+ l->str = malloc(strlen(top) + 1);
+ l->x = 1;
+ l->color = l->forw->color;
+ strcpy(l->str, top);
+ 
+ l = make_line_after(file->copy_end_pos);
+ l->str = malloc(strlen(bot) + 1);
+ l->x = 1;
+ l->color = l->backw->color;
+ strcpy(l->str, bot);
+ 
+ redraw_screen();
+ return 0;
+}
+
+int
+enframe_cmd()
+{
+ enframe(enframe_top, enframe_bot);
+ return 0;
+}
+
+int
+enframe_ind (char* top, char* bot)
+{
+ line_t* l1;
+ line_t* l2;
+ 
+ l1 = make_line_before(file->copy_start_pos);
+// l1->str = malloc(
+ init_line(l1);
+ l1->str = realloc(l1->str, strlen(l1->str) + strlen(top) + 1);
+ 
+ l2 = make_line_after(file->copy_end_pos);
+ l2->str = strdup(l1->str);
+ l2->str = realloc(l2->str, strlen(l1->str) + strlen(bot) + 1);
+ strcpy (l2->str, l1->str);
+ l2->x = l1->x;
+ l2->color = l1->color;
+ 
+ strcat(l1->str, top);
+ strcat(l2->str, bot);
+ 
+ redraw_screen();
+ return 0;
+}
+
+int
+enframe_alt_ind_cmd()
+{
+ char top[MAX_LINE];
+ char bot[MAX_LINE];
+           
+ if (getstring(top, "Enframe top:") == 27) return 1;
+ if (getstring(bot, "Enframe bot:") == 27) return 1;
+ enframe_ind(top, bot);
+ return 0;
+}
+
+int
+enframe_alt_noind_cmd()
+{
+ char top[MAX_LINE];
+ char bot[MAX_LINE];
+           
+ if (getstring(top, "Enframe top:") == 27) return 1;
+ if (getstring(bot, "Enframe bot:") == 27) return 1;
+ enframe(top, bot);
+ return 0;
+}
+
+int
+set_tab(int argn , char** argv)
+{
+ int i = 0;
+ if(argn == 1) {
+ 	sprintf(msg, "tab_len: %d", tab_len);
+ 	message(msg);
+ }
+ if(argn != 2) return 0;
+
+ i = atoi(argv[1]); 
+ if (i > 80) i = 80;
+ if (i > 0)
+ tab_len = i;
+ redraw_screen();
+ sprintf(msg, "tab_len: %d",  tab_len);
+ message(msg);
+ return 0;
+}
+
+int
+set_debug_screen(int argn , char** argv)
+{
+ int i = 0;
+ if(argn == 1) {
+ 	sprintf(msg, "dwin_size: %d", dwin_size);
+ 	message(msg);
+ }
+ if(argn != 2) return 0;
+
+ i = atoi(argv[1]); 
+ 
+/*
+ 	i = _wintop - dwin_bot;
+*/
+ 
+ if (dwin_bot - i > _wintop)
+ if (i >= 0)
+ dwin_size = i;
+ resize();
+ redraw_screen();
+ sprintf(msg, "dwin_size: %d",  dwin_size);
+ message(msg);
+ return 0;
+}
+
+
+int
+clear_debug_screen()
+{
+ int i;
+ 
+ savecur();
+ 
+ for (i = dwin_top; i <= dwin_bot; i++)
+ {
+ 	moveyx(i, 1);
+ 	clreol();
+ }
+ restcur();
+ return 0;
+}
+
+int
+inspect_key()
+{
+ int i;
+ char c;
+// int (*pfunc)() = NULL;
+ cmd_t* cmd = NULL;
+ 
+ message("enter key");
+ c = getchar();
+ cmd = command_char(c);
+ if (!cmd)
+	 snprintf(msg, MAX_LINE, "key not found");
+ else
+ 	snprintf(msg, MAX_LINE, "(%d) %s, %s", key_pressed[c] + key_stat[c], 
+ 			cmd->name, cmd->help_str);
+ message(msg);
+ 
+ return 0;
+}
+
+
+int
+repeat_command()
+{
+ 
+ return 0;
+}
+
+
+/*
+#define K_TEST 'T'
+*/
+
+
+int 
+time_test(int mode)
+{
+ static struct timespec t1, t2;
+/*
+ clockid_t clk_id = CLOCK_PROCESS_CPUTIME_ID;
+*/
+ static clockid_t clk_id = CLOCK_REALTIME;
+ 
+ if (mode == START) 
+	clock_gettime(clk_id, &t1);
+/*
+ pfunc();
+*/
+ if (mode == STOP)
+ {
+	clock_gettime(clk_id, &t2);
+	dprint("%3.3f\n", (double)(t2.tv_sec - t1.tv_sec) + (double)(t2.tv_nsec - t1.tv_nsec) / 1000000000);
+ }
+/*
+ dprint("%d, %ld\n", t2.tv_sec - t1.tv_sec, t2.tv_nsec - t1.tv_nsec);
+*/
+ 
+ return 0;
+}
+
+
+int
+test_outp()
+{
+ int i, j, k;
+ char* str = "Table 2.1 summarizes the rules for precedence and associativity\n";
+ int len = strlen(str);
+ int n = 10;
+ int *p = &n;
+ dprint("%n\n", p);
+// initscr();
+ 
+ for (i = 0; i < 10; i++)
+ for (j = 0; j < 24; j++)
+ {
+	tc_savecur();
+	tc_restcur();
+/*
+	write(1, "\033[6n", 4);
+	print_line_x(1, j, str);
+ 	write(1, str, len);
+ 	printf("%s", str);
+	mvprintw(j, 1, str);
+	move(j, 0);
+	moveyx(j+1, 1);
+	deb_getpos(&file->y_cur[file->top], &file->x_cur[file->top]);
+*/
+//	refresh();
+ }
+// endwin();
+ 
+ return 0;
+}
+
+
+int
+test()
+{
+	show_buffers();
+	renumber_all();
+	show_bar(SH_LINE);
+/*
+ func();
+ clear_debug_screen();
+ time_test(START);
+ sleep(3);
+ time_test(STOP);
+ return 0;
+*/
+}
+
+int
+func()
+{
+ int i;
+ printf("func\n");
+ 
+ return 0;
+}
+
+
+int
+test1() {
+ clear_debug_screen();
+ time_test(START);
+ test_print_line_x();
+ time_test(STOP);
+ return 0;
+}
+
+int
+test_print_line_x() 
+{
+ int i, j;
+ char* str = "Table 2.1 summarizes the rules for precedence and associativity\n";
+ int len = strlen(str);
+ 
+ for (i = 0; i < 600; i++)
+ for (j = 0; j < 24; j++)
+ {
+	deb_print_line_x(1, j, str);
+ }
+ return 0;
+}
+ 
+
+
+int
+script() {
+dmessage("script");
+ return 0;
+
+#ifdef COMPILE_SCRIPT
+ clear_all();
+ line_t* head =  file->cur_line;
+ script_t* scr;
+ 
+ while(head->backw)
+ 	head = head->backw;
+ 
+ scr = compile(head);
+// printf("compile completed\n");
+ 
+ if (scr)
+ {
+	 exec_script(scr);
+ }
+ else
+ 	printf("scr == NULL\n");
+ 	
+ gmessage("debug script"); 	
+ getchar(); 	
+ redraw_screen();
+ 
+#endif
  return 0;
 }

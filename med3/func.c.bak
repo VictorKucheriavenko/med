@@ -1,0 +1,671 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+#include <termios.h>
+#include "med.h"
+#include "term.h"
+#include "color.h"
+#define INIT_NUM 1000
+
+line_t* lines;
+line_t* lines_head;
+
+int main(int argn, char *argv[])
+{
+
+ if( argn != 2 )
+    return 0;
+
+ int i, fd;
+ char ch;
+ char buf[500];
+ struct termios term, restore;
+
+ x_offs = 0;
+
+ setvbuf(stdout, NULL, _IONBF, 0);
+ setvbuf(stdin,  NULL, _IONBF, 0);
+
+ fd = read_buffer(argv[1]);
+ cur_line = lines_head->next;
+ printf("lines_head: %p\n", lines_head);
+ //print_lines(lines_n);
+
+
+
+
+ tcgetattr(0, &term);
+ tcgetattr(0, &restore);
+ term.c_lflag &= ~(ICANON | ECHO);
+ tcsetattr(0, TCSANOW, &term);
+
+
+ set_tabs(NCOLS, TABS);
+ printf("\033[;H");
+ clear_all();
+ printf("\033[13;H");
+ print_lines(1, DWN - CENT);
+/*
+ for(i = 0; i < lines_n; i++){
+  //  printf("%d:", i);
+    printf("%s\n", (lines+i)->str);
+    }
+*/
+
+
+
+
+ printf("\033[13;H");
+
+ while( 1 ) {
+    ch = getchar();
+
+    switch( ch ) {
+       case K_UP:
+	  move_up(1);
+	  break;
+       case K_UP1:
+	  move_up(4);
+	  break;
+       case K_UP2:
+	  move_up(16);
+	  break;
+       case K_DOWN:
+	  move_down(1);
+	  break;
+       case K_DOWN1:
+	  move_down(4);
+	  break;
+       case K_DOWN2:
+	  move_down(16);
+	  break;
+       case K_LEFT:
+	  move_left(1);
+	  break;
+       case K_LEFT1:
+	  move_left(2);
+	  break;
+       case K_LEFT2:
+	  move_left(8);
+	  break;
+       case K_RIGHT:
+	  move_right(1);
+	  break;
+       case K_RIGHT1:
+	  move_right(2);
+	  break;
+       case K_RIGHT2:
+	  move_right(8);
+	  break;
+       case K_DELLINE:
+          del_line();
+//	  x_offs = 0;
+	  break;
+       case K_WRITE: 
+          write_buf(fd);
+	  break;
+       case K_QUIT:
+	  clear_all();
+	  close(fd);
+          goto exit;
+	  break;
+       case K_DEL:
+	  //del_char_right();
+	  del_char();
+	  break;
+       case K_INS_MOD:
+	  insert_string();
+	  break;
+       case 'y':
+	  move(7,7);
+	  break;
+       default:
+	  break;
+    }
+ }
+
+
+ exit:
+ puts("exiting\n");
+ tcsetattr(0, TCSANOW, &restore);
+ return 0;
+}
+int 
+setnocanon()
+{
+ struct termios term;
+ tcgetattr(0, &term);
+ term.c_lflag &= ~ICANON;
+ tcsetattr(0, TCSANOW, &term);
+ return 0;
+}
+
+int 
+setcanon()
+{
+ struct termios term;
+ tcgetattr(0, &term);
+ term.c_lflag |= ICANON;
+ tcsetattr(0, TCSANOW, &term);
+ return 0;
+}
+
+int 
+setnoecho()
+{
+ struct termios term;
+ tcgetattr(0, &term);
+ term.c_lflag &= ~ECHO;
+ tcsetattr(0, TCSANOW, &term);
+ return 0;
+}
+
+int 
+setecho()
+{
+ struct termios term;
+ tcgetattr(0, &term);
+ term.c_lflag |= ECHO;
+ tcsetattr(0, TCSANOW, &term);
+ return 0;
+}
+
+
+getpos(int *y, int *x) {
+ int i = 0;
+ char buf[30] = {0};
+ memset( buf, 0, 30);
+ char ch;
+ int pow;
+
+ *x = 0;
+ *y = 0;
+
+ setnocanon();
+ setnoecho();
+
+ int res, retval;
+ res = fcntl(0, F_SETFL, O_NOCTTY);
+ //res = fcntl(1, F_SETFL, O_NDELAY);
+
+ res = write(1, "\033[6n", 4);
+ sleep(4);
+ //setecho();
+ /*
+ fflush(stdin);
+ fflush(stdout);
+ */
+
+ for( i = 0, ch = 0; ch != 'R' /*&& res == 1 || i < 10*/; i++ ) {
+    res = read(0, &ch, 1);
+    if ( res != 1 ) {
+       fprintf(stderr, "getpos: error reading response!\n");
+       return 1;
+    }
+    //printf("buf[%d]: %c\n", i, ch);
+    buf[i] = ch;
+ }
+ printf("%s\n", buf+1);
+ printf("i: %d\n", i);
+ //exit(1);
+ if(i<2) {
+    printf("i < 2\n");
+    exit(1);
+    }
+
+
+    for( i -= 2, pow = 1; buf[i] != ';'; i--, pow *= 10)
+       *x = *x + ( buf[i] - '0' ) * pow;
+
+    for( i-- , pow = 1; buf[i] != '['; i--, pow *= 10)
+       *y = *y + ( buf[i] - '0' ) * pow;
+ 
+ //setcanon();
+   return 0;
+}
+
+int
+set_tabs(int ncols, int tabs)
+{
+ int i, j;
+
+ printf("\033[;H");/* move to 1, 1 */
+ printf("\033[3g"); /* remove tab stops */
+
+ for( i = 0, j = 0; i < ncols; i++) {
+    if( j == tabs ) {
+       j = 0;
+       printf("\033H"); /* place tab */
+    }
+    else j++;
+    printf("\033[C");
+ }
+ return 0;
+}
+
+char*
+del (char *str, int o, int n)
+{
+ char *buf;
+ int i;
+ int len = strlen(str);
+ buf = calloc( len + 1, 1 );
+
+ if( o <= 0 || n < 0 )
+    return NULL;
+
+ if( o > len ) {
+    strcpy(buf, str);
+ } else
+ if( o + n > len ) {
+    strncpy(buf, str, o - 1);
+ } 
+ else {
+    strncpy(buf, str, o - 1);
+    strcat(buf, str + o - 1 + n);
+ }
+return buf;
+}
+
+int
+del_char()
+{
+ if( cur_line->len == 0 )
+    del_line();
+ char *buf = calloc( strlen( cur_line->str ) - 1 + 1, 1 );
+ strcpy( buf, del(cur_line->str, x_offs+1, 1) );
+/*
+ if(cur_line->str == NULL) {
+  printf("Alarm!!!\n");
+  exit(1); 
+  }
+  */
+ free( cur_line->str );
+ cur_line->str = buf;
+ printf( CLR"%s", cur_line->str + x_offs);
+ move(13, x_offs+1);
+ cur_line->len = strlen(cur_line->str);
+ return 0;
+}
+
+int
+del_char_right()
+{
+ char buf[MAX_LINE];
+ int len = strlen( cur_line->str );
+//*(cur_line->
+ memmove(cur_line->str + x_offs, cur_line->str + x_offs + 1, len + 1);
+ printf( CLR"%s", cur_line->str + x_offs);
+ move(13, x_offs+1);
+ //printf(KGRN"%d\n"KNRM, x_offs );
+ return 0;
+}
+
+
+char*
+insert (char *str1, int n, char *str2)
+{
+ char *buf;
+ int i;
+
+ if ( n > strlen(str1) ) return NULL;
+
+ buf = calloc( strlen(str1) + strlen(str2) + 1, 1);
+ strncpy(buf, str1, n);
+ strcat(buf, str2);
+ strcat (buf, str1+n);
+ return buf;
+}
+
+int
+getstring(char* buf, int nmax) {
+ int i, res;
+ char ch;
+
+ setnocanon();
+ setnoecho();
+
+
+ i = 0;
+ do {
+    res = read(0, &ch, 1);
+
+    switch (ch) {
+
+       case BCSP:
+	  ch = DEL;
+
+       case DEL:
+	  *(buf+i) = ch;
+	  write(1, buf+i, 1);
+	  i--;
+	  break;
+
+       case 27: case 10: case 0:
+	  ch = 0;
+	  *(buf+i) = 0;
+	  break;
+
+       default:
+	  *(buf+i) = ch;
+	  write(1, buf+i, 1);
+	  i++;
+    }
+
+ } while ( ch != 0 );
+
+ setecho();
+
+ return 0;
+}
+
+int
+insert_string()
+{
+ int i;
+ char buf[MAX_LINE];
+
+ struct termios term;
+ struct termios restore;
+
+ tcgetattr(0, &term);
+ tcgetattr(0, &restore);
+ term.c_lflag |= (ICANON | ECHO);
+ tcsetattr(0, TCSANOW, &term);
+
+ getstring(buf, MAX_LINE);
+ cur_line->str = insert( cur_line->str, x_offs, buf);
+ cur_line->len = strlen( cur_line->str);
+ move(13, 1);
+ printf(CLR"%s", cur_line->str);
+ move(13, x_offs+1);
+
+ tcsetattr(0, TCSANOW, &restore);
+ return 0;
+}
+
+
+int 
+read_line(FILE* file, char* buf)
+{
+ int fd, i;
+ char c;
+ c = fgetc(file);
+ for( i = 0; c != '\n' && c != EOF; i++ ) {
+    buf[i] = c;
+    c = fgetc(file);
+ }
+ buf[i] = '\0';
+ return c;
+}
+
+int 
+write_buf(int fd)
+{
+ lseek(fd, 0, SEEK_SET);
+ int i, res;
+ char buf[500];
+ FILE *file = fdopen(fd, "r+");
+ ftruncate(fd, 0);
+ perror("fdopen");
+ lines = lines_head->next;
+ while( lines->next != NULL ) {
+    strcpy( buf, lines->str);
+//printf("\033[K");//clear EOL
+    for(i = 0; buf[i] != '\0'; i++) {
+       fputc(buf[i], file);
+//    printf("debug"KRED"%c\033[K\n"KNRM, buf[i]);
+    }
+    fputc('\n', file);
+    lines = lines->next;
+ }
+ fflush(NULL);
+}
+
+line_t*
+make_line()
+{
+ line_t* line;
+ line = malloc( sizeof(line_t) );
+ return line;
+}
+
+
+int
+read_buffer(char* path)
+{
+ int fd, savestdin;
+ int i, j;
+ line_t *tmp;
+ int lines_n;
+ char buf[MAX_LINE];
+ FILE* file;
+
+ fd = open(path, O_RDWR);
+
+ lines_head = malloc( sizeof(line_t) );
+ lines_head->str = malloc(1);
+ *(lines_head->str) = '\0';
+ lines_head->len = 0;
+ lines = lines_head;
+ lines->prev = NULL;
+
+ file = fdopen(fd, "r+");
+ while( read_line(file, buf) != EOF ) {
+    lines->next = malloc( sizeof(line_t) );
+    tmp = lines;
+    lines = lines->next;
+    lines->prev = tmp;
+    lines->str = calloc( strlen(buf) + 1, 1);
+    strcpy( lines->str, buf);
+    lines->len = strlen( lines->str );
+    lines->next = NULL;
+ }
+    lines->next = malloc( sizeof(line_t) );
+    tmp = lines;
+    lines = lines->next;
+    lines->prev = tmp;
+    lines->str = calloc( strlen(buf) + 1, 1);
+    strcpy( lines->str, buf);
+    lines->len = strlen( lines->str );
+    lines->next = NULL;
+ return fd;
+}
+
+
+int
+move_down(int n)
+{
+ int i;
+ for( i = 0; i < n; i++)
+ if ( cur_line->next->next != NULL ) {
+    x_offs = 0;
+    scroll_up();
+    cur_line = cur_line->next;
+    printf("\033[25;H");
+//    print_lines_cur(12, 1);
+    print_bottom_line(12, 1);
+    printf("\033[13;H");
+ }
+ return 0;
+}
+
+
+
+int
+move_up(int n)
+{
+ int i;
+ for( i = 0; i < n; i++)
+ if ( cur_line->prev->prev != NULL ) {
+    x_offs = 0;
+    scroll_down();
+    cur_line = cur_line->prev;
+    printf("\033[0;H");
+    print_top_line(12, 1);
+    printf("\033[13;H");
+ }
+ return 0;
+}
+
+int
+move_left(int n)
+{
+ int i;
+;	;
+ for( i = 0; i < n; i++ )
+ if( x_offs + 1 > 0 ) {
+     if( *(cur_line->str + x_offs) == '\t' )
+	   move_tab_backw();
+	 else
+    printf("\033[%dD", 1);
+    if( x_offs > 0)
+    x_offs--;
+ }
+ return 0;
+}
+
+int
+move_right(int n)
+{
+int i;
+for( i = 0; i < n; i++ )
+if( x_offs + 1 < cur_line->len ) {
+    if( *(cur_line->str + x_offs + 0) == '\t' )
+	 move_tab_forw();
+    else //printf("TAB!!!   ");
+    printf("\033[%dC", 1);
+    fflush(stdout);
+    x_offs++;
+ }
+ return 0;
+}
+
+int
+move_tab_forw(int pos)
+{
+ /*
+ int x;
+ x = pos  / TABS + TABS;
+ move(13, x);
+ */
+ write(1, "\t", 1);
+ return 0;
+}
+
+int
+move_tab_backw(int pos)
+{
+ /*
+ int x;
+ x = (x_offs + 1) / TABS;
+ move(13, x);
+ write(1, "\t", 1);
+ */
+ write(1, "\033[8D", strlen("\033[8D") );
+ return 0;
+}
+
+/*
+int
+print_line(char* str)
+{
+ int i;
+ for( i = 0; *(str+i) != '\0'; i++ ) {
+    switch ( *(str+i) ) {
+       case '\t':
+	  place_tab_forw();
+	  break;
+       default:
+	  putchar( *(str+i) );
+	  break;
+    }
+ }
+ return 0;
+}
+*/
+
+
+int
+del_line()
+{
+ if( cur_line->prev == NULL || cur_line->next == NULL )
+    return 0;
+ line_t *prev;
+ line_t* tmp;
+ tmp = cur_line; 
+ cur_line = cur_line->next;
+ cur_line->prev = tmp->prev;
+ tmp->prev->next = cur_line;
+ free( tmp->str );
+ free( tmp );
+
+ //clear_down();
+ clear_all();
+ print_lines_cur(0, 12);
+ print_bottom_line(12, 1);
+ printf("\033[13;H");
+ return 0;
+}
+
+int
+output_line(line_t* l)
+{
+ printf("%s\n", l->str);
+ return 0;
+} 
+
+
+
+int
+print_lines(int s, int n)
+{
+ int i;
+ line_t* pr_line;
+ pr_line = lines_head;
+ for( i = 0; i < s && pr_line->next != NULL; i++ )
+    pr_line = pr_line->next; 
+ for( i = 0; pr_line->next != NULL && i < n; i++ ) {
+    printf("%s\n", pr_line->str);
+    pr_line = pr_line->next;
+    }
+}
+
+
+print_top_line(int s)
+{
+ int i;
+ line_t* pr_line;
+ pr_line = cur_line;
+ for( i = 0; i < s && pr_line->prev != NULL; i++ )
+    pr_line = pr_line->prev; 
+ printf("%s", pr_line->str);
+}
+
+print_bottom_line(int s, int n)
+{
+ int i;
+ line_t* pr_line;
+ pr_line = cur_line;
+ for( i = 0; i < s && pr_line->next != NULL; i++ )
+    pr_line = pr_line->next; 
+ for( i = 0; pr_line->next != NULL && i < n; i++ ) {
+    printf("%s", pr_line->str);
+    pr_line = pr_line->next;
+    }
+}
+print_lines_cur(int s, int n)
+{
+ int i;
+ line_t* pr_line;
+ pr_line = cur_line;
+ for( i = 0; i < s && pr_line->next != NULL; i++ )
+    pr_line = pr_line->next; 
+ for( i = 0; pr_line->next != NULL && i < n; i++ ) {
+    printf("%s\n", pr_line->str);
+    pr_line = pr_line->next;
+    }
+}
